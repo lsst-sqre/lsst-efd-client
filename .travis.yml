@@ -2,16 +2,12 @@
 
 language: python
 python:
-  - 3.8
   - 3.7
-  - 3.6
-  - 3.5
 
 # Command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -U tox-travis
+install: pip install -r requirements_dev.txt
 
-# Command to run tests, e.g. python setup.py test
-script: tox
+script: python setup.py test
 
 # Assuming you have installed the travis-ci CLI tool, after you
 # create the Github repo and add it to Travis, run the
@@ -20,10 +16,10 @@ script: tox
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
-  user: krughoff
+  user: __token__
   password:
-    secure: PLEASE_REPLACE_ME
+    secure: "L0yKLyro2hDO1oNeLUoVAqeJEAGGl/HT5eWwIdB2ciWa3wrfyst6Nx98qHU76iqX7yhzfE2osh+N9ZsVJ6IrZlaJ/Nvq+XrTIEqX02Ln/us0nTOspTtu7IgVHqfCrlbR27pSf4YobAGhb5iLawnwG6hnhXhxrfyiYsGBHx+8h7jkmky528OHVBRH4rJfu8xu0PUjJzzqcWk2mKOpwjRgU27V7PgzOipZuvso3C0VNyoirqPSU9n2ahpOqCp2VWjneYVAOI/obffxuReS987oFkywdPRclW0fsHNsf3ovhAFz62TGw4l/piaQxlWn54+xyLUzBKNv5vYMcvDnDPZHplYKXHJrZyyLuAt0BPMvT6fSTzWpGOZMyobC2lE1R43FLe56q/0eSklU7QiUUBxGxtNL3CxbzHwrKg/7jAk2hbY6iCBK75zl3I8zSAsStcNsPsMjHIyCv2RdTOiaa9AzN4+D3UCkpGcTe+bWqOXpFJaRxJgvsph0/8fvhON6hJGSSREEVJKl/lQ8kshm1wudXJBPo63toqA/9vRzAFiKMvfenTahoSJYSPDPMmvpywiy611wLdTJWdqHJ+Ekdi7xcBYWhfJo5Vq2XTzFxqdH3DQ3RzvPGDZ3XF0KGMMKIWCtsAiBMiP9eUQPEpo4PsRwLHuJZPAlg15goNW6fDzNgZ8="
   on:
     tags: true
-    repo: SimonKrughoff/lsst_efd_client
-    python: 3.8
+    repo: lsst-sqre/lsst-efd-client
+    python: 3.7
