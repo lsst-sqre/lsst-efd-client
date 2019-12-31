@@ -32,6 +32,7 @@ class EfdClient:
     """Class to handle connections and basic queries"""
     subclasses = {}
     deployment = ''
+
     def __init__(self, efd_name, db_name='efd', port='443',
                  internal_scale='tai', path_to_creds='~/.lsst/notebook_auth.yaml'):
         self.db_name = db_name
@@ -57,9 +58,9 @@ class EfdClient:
         EfdClient.subclasses[cls.deployment] = cls
 
     def from_name(self, efd_name, *args, **kwargs):
-        if db_name not in self. subclasses:
-            raise NotImplementedError(f'There is no EFD client class implemented for {db_name}.')
-        return self.subclasses[db_name](efd_name, *args, **kwargs)
+        if efd_name not in self. subclasses:
+            raise NotImplementedError(f'There is no EFD client class implemented for {efd_name}.')
+        return self.subclasses[efd_name](efd_name, *args, **kwargs)
 
     async def _do_query(self, query):
         self.query_history.append(query)
@@ -74,14 +75,14 @@ class EfdClient:
         fields = await self._do_query(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
         return fields['fieldKey'].tolist()
 
-    async def select_time_series(self, topic_name, fields, start, end, is_window=False):
-        """Select a time series for a set of topics in a single subsystem"""
+    def build_time_range_query(self, topic_name, fields, start, end, is_window=False):
+        ''' Build the query '''
         if not isinstance(start, Time):
             raise TypeError('The first time argument must be a time stamp')
 
         if not start.scale == self.internal_scale:
             logging.warn(f'Timestamps must be in {self.internal_scale.upper()}.  Converting...')
-            start = getattr(t, self.internal_scale)
+            start = getattr(start, self.internal_scale)
 
         if isinstance(end, TimeDelta):
             if is_window:
@@ -107,8 +108,11 @@ class EfdClient:
             fields = [fields, ]
 
         # Build query here
-        query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
+        return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
+    async def select_time_series(self, topic_name, fields, start, end, is_window=False):
+        """Select a time series for a set of topics in a single subsystem"""
+        query = self.build_time_range_query(topic_name, fields, start, end, is_window)
         # Do query
         ret = await self._do_query(query)
         if not isinstance(ret, pd.DataFrame) and not ret:
