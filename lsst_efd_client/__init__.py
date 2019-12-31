@@ -1,7 +1,7 @@
 """
 Collection of EFD utilities
 """
-__version__ = "__version__ = '0.1.6'"
+__version__ = "__version__ = '0.1.7'"
 from .auth_helper import NotebookAuth
 from .efd_helper import EfdClient, resample
 
