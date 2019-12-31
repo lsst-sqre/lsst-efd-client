@@ -14,7 +14,8 @@ requirements = [
                 'numpy>=1.16.0',
                 'aioinflux',
                 'pandas',
-                'astropy', ]
+                'astropy', 
+                'pyyaml', ]
 
 setup_requirements = [
                       'pip==19.2.3',
