@@ -38,12 +38,12 @@ class EfdClient:
         self.db_name = db_name
         self.internal_scale = internal_scale
         self.auth = NotebookAuth(path=path_to_creds)
-        self.host, self.user, self.password = self.auth.get_auth(efd_name)
-        self.influx_client = aioinflux.InfluxDBClient(host=self.host,
+        host, user, password = self.auth.get_auth(efd_name)
+        self.influx_client = aioinflux.InfluxDBClient(host=host,
                                                       port=port,
                                                       ssl=True,
-                                                      username=self.user,
-                                                      password=self.password,
+                                                      username=user,
+                                                      password=password,
                                                       db=db_name,
                                                       mode='async')  # mode='blocking')
         self.influx_client.output = 'dataframe'
