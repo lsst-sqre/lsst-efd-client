@@ -52,7 +52,7 @@ Currently, my file looks like this:
   summit_efd:
     username: <user>
     password: <passwd>
-    host: "summit-influxdb-efd.lsst.codes"
+    host: "influxdb-summit-efd.lsst.codes"
 
 Credits
 -------
