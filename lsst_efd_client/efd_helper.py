@@ -38,12 +38,12 @@ class EfdClient:
         self.db_name = db_name
         self.internal_scale = internal_scale
         self.auth = NotebookAuth(path=path_to_creds)
-        self.host, self.user, self.password = self.auth.get_auth(efd_name)
-        self.influx_client = aioinflux.InfluxDBClient(host=self.host,
+        host, user, password = self.auth.get_auth(efd_name)
+        self.influx_client = aioinflux.InfluxDBClient(host=host,
                                                       port=port,
                                                       ssl=True,
-                                                      username=self.user,
-                                                      password=self.password,
+                                                      username=user,
+                                                      password=password,
                                                       db=db_name,
                                                       mode='async')  # mode='blocking')
         self.influx_client.output = 'dataframe'
@@ -75,7 +75,7 @@ class EfdClient:
         fields = await self._do_query(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
         return fields['fieldKey'].tolist()
 
-    def build_time_range_query(self, topic_name, fields, start, end, is_window=False):
+    def build_time_range_query(self, topic_name, fields, start, end, is_window=False, index=None):
         ''' Build the query '''
         if not isinstance(start, Time):
             raise TypeError('The first time argument must be a time stamp')
@@ -98,8 +98,11 @@ class EfdClient:
         else:
             raise TypeError('The second time argument must be the time stamp for the end ' +
                             'or a time delta.')
-
-        timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'"  # influxdb demands the trailing Z
+        index_str = ''
+        if index:
+            parts = topic_name.split('.')
+            index_str = f' AND {parts[-2]}ID = {index}'  # The CSC name is always the penultimate in the namespace
+        timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"  # influxdb demands the trailing Z
 
         if isinstance(fields, str):
             fields = [fields, ]
@@ -110,9 +113,9 @@ class EfdClient:
         # Build query here
         return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
-    async def select_time_series(self, topic_name, fields, start, end, is_window=False):
+    async def select_time_series(self, topic_name, fields, start, end, is_window=False, index=None):
         """Select a time series for a set of topics in a single subsystem"""
-        query = self.build_time_range_query(topic_name, fields, start, end, is_window)
+        query = self.build_time_range_query(topic_name, fields, start, end, is_window, index)
         # Do query
         ret = await self._do_query(query)
         if not isinstance(ret, pd.DataFrame) and not ret:
@@ -164,7 +167,7 @@ class EfdClient:
         return ret, n
 
     async def select_packed_time_series(self, topic_name, base_fields, start, end,
-                                        is_window=False, ref_timestamp_col="cRIO_timestamp"):
+                                        is_window=False, index=None, ref_timestamp_col="cRIO_timestamp"):
         """Select fields that are time samples and unpack them into a dataframe"""
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):
@@ -177,7 +180,7 @@ class EfdClient:
         for k in qfields:
             field_list += qfields[k]
         result = await self.select_time_series(topic_name, field_list+[ref_timestamp_col, ],
-                                               start, end, is_window=is_window)
+                                               start, end, is_window=is_window, index=index)
         times = []
         timestamps = []
         vals = {}
