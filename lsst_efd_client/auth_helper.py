@@ -18,10 +18,10 @@ class NotebookAuth:
         if not os.path.isfile(secret_path):
             raise ValueError("No auth file at: {}".format(secret_path))
         mode = os.stat(secret_path).st_mode
-        if mode & (stat.S_IRWXG | stat.S_IRWXO) != 0:
+        if stat.S_IMODE(mode) != 0o600:
             raise IOError(
-                "Auth file {secret_path} has incorrect permissions: "
-                "{mode:o}".format(secret_path, mode))
+                f"Auth file {secret_path} has incorrect permissions: "
+                f"{oct(stat.S_IMODE(mode))}. Must be 0o600 instead.")
 
         try:
             with open(secret_path) as secret_file:
