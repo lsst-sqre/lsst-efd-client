@@ -1,23 +1,5 @@
-# This file is part of jupyterlabutils.
-#
-# Developed for the LSST Data Management System.
-# This product includes software developed by the LSST Project
-# (https://www.lsst.org).
-# See the COPYRIGHT file at the top-level directory of this distribution
-# for details of code ownership.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""EFD client class
+"""
 
 import aioinflux
 from functools import partial
@@ -29,7 +11,30 @@ from .auth_helper import NotebookAuth
 
 
 class EfdClient:
-    """Class to handle connections and basic queries"""
+    """Class to handle connections and basic queries
+
+    Parameters
+    ----------
+    efd_name : `str`
+        Name of the EFD instance for which to retrieve credentials.
+    db_name : `str`, optional
+        Name of the database within influxDB to query ('efd' by default).
+    port : `str`, optional
+        Port to use when querying the database ('443' by default).
+    internal_scale : `str`, optional
+        Time scale to use when converting times to internal formats
+        ('tai' by default).
+    path_to_creds : `str`, optional
+        Absolute path to use when reading credentials from disk
+        ('~/.lsst/notebook_auth.yaml' by default).
+    """
+
+    influx_client = None
+    """The `aioinflux.InfluxDBClient` used for queries.
+    This should be used to execute queries not wrapped
+    by this class.
+    """
+
     subclasses = {}
     deployment = ''
 
@@ -51,32 +56,105 @@ class EfdClient:
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
-        """Register subclasses with the abstract base class"""
+        """Register subclasses with the abstract base class.
+        """
         super().__init_subclass__(**kwargs)
         if cls.mode in EfdClient.subclasses:
             raise ValueError(f'Class for mode, {cls.mode}, already defined')
         EfdClient.subclasses[cls.deployment] = cls
 
     def from_name(self, efd_name, *args, **kwargs):
+        """Construct a client for the specific named subclass.
+
+        Parameters
+        ----------
+        efd_name : `str`
+            Name of the EFD instance for which to construct a client.
+        *args
+            Extra arguments to pass to the subclass constructor.
+        **kwargs
+            Extra keyword arguments to pass to the subclass constructor.
+
+        Raises
+        ------
+        NotImpementedError
+            Raised if there is no subclass corresponding to the name.
+        """
         if efd_name not in self. subclasses:
             raise NotImplementedError(f'There is no EFD client class implemented for {efd_name}.')
         return self.subclasses[efd_name](efd_name, *args, **kwargs)
 
     async def _do_query(self, query):
+        """Query the influxDB and return results
+
+        Parameters
+        ----------
+        query : `str`
+            Query string to execute.
+
+        Returns
+        -------
+        results : `pandas.DataFrame`
+            Results of the query in a `pandas.DataFrame`.
+        """
         self.query_history.append(query)
         result = await self.influx_client.query(query)
         return result
 
     async def get_topics(self):
+        """Query the list of possible topics.
+
+        Returns
+        -------
+        results : `list`
+            List of valid topics in the database.
+        """
         topics = await self._do_query('SHOW MEASUREMENTS')
         return topics['name'].tolist()
 
     async def get_fields(self, topic_name):
+        """Query the list of field names for a topic.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query for field names.
+
+        Returns
+        -------
+        results : `list`
+            List of field names in specified topic.
+        """
         fields = await self._do_query(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
         return fields['fieldKey'].tolist()
 
     def build_time_range_query(self, topic_name, fields, start, end, is_window=False, index=None):
-        ''' Build the query '''
+        """Build a query based on a time range.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic for which to build a query.
+        fields :  `str` or `list`
+            Name of field(s) to query.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `boolean`, optional
+            If set and the end time is specified as a `TimeDelta`,
+            compute a range centered on the start time (default is `False`).
+        index : `int`, optional
+            For indexed topics set this to the index of the topic to query
+            (default is `None`).
+
+        Returns
+        -------
+        query : `str`
+            A string containing the constructed query statement.
+        """
         if not isinstance(start, Time):
             raise TypeError('The first time argument must be a time stamp')
 
@@ -101,8 +179,8 @@ class EfdClient:
         index_str = ''
         if index:
             parts = topic_name.split('.')
-            index_str = f' AND {parts[-2]}ID = {index}'  # The CSC name is always the penultimate in the namespace
-        timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"  # influxdb demands the trailing Z
+            index_str = f' AND {parts[-2]}ID = {index}'  # The CSC name is always the penultimate
+        timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"  # influxdb demands last Z
 
         if isinstance(fields, str):
             fields = [fields, ]
@@ -114,7 +192,32 @@ class EfdClient:
         return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
     async def select_time_series(self, topic_name, fields, start, end, is_window=False, index=None):
-        """Select a time series for a set of topics in a single subsystem"""
+        """Select a time series for a set of topics in a single subsystem
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        fields :  `str` or `list`
+            Name of field(s) to query.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `boolean`, optional
+            If set and the end time is specified as a `TimeDelta`,
+            compute a range centered on the start time (default is `False`).
+        index : `int`, optional
+            For indexed topics set this to the index of the topic to query
+            (default is `None`).
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `pandas.DataFrame` containing the results of the query.
+        """
         query = self.build_time_range_query(topic_name, fields, start, end, is_window, index)
         # Do query
         ret = await self._do_query(query)
@@ -125,7 +228,21 @@ class EfdClient:
 
     async def select_top_n(self, topic_name, fields, num):
         """Select the most recent N samples from a set of topics in a single subsystem.
-           This method does not guarantee returned sorting direction rows.
+        This method does not guarantee sort direction of the returned rows.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        fields : `str` or `list`
+            Name of field(s) to query.
+        num : `int`
+            Number of rows to return.
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `pandas.DataFrame` containing teh results of the query.
         """
 
         # The "GROUP BY" is necessary to return the tags
@@ -148,6 +265,24 @@ class EfdClient:
         return ret
 
     def _make_fields(self, fields, base_fields):
+        """Construct the list of fields for a field that
+        is the result of ingesting vector data.
+
+        Parameters
+        ----------
+        fields : `list`
+            List of field names to search for vector field names.
+        base_fields : `list`
+            List of base field names to search the fields list for.
+
+        Returns
+        -------
+        fields : `tuple`
+            Tuple containing a dictionary keyed by the base field
+            names with lists of resulting fields from the fields list
+            and a single `int` representing number of entries in each
+            vector (they must be the same for all base fields).
+        """
         ret = {}
         n = None
         for bfield in base_fields:
@@ -168,7 +303,36 @@ class EfdClient:
 
     async def select_packed_time_series(self, topic_name, base_fields, start, end,
                                         is_window=False, index=None, ref_timestamp_col="cRIO_timestamp"):
-        """Select fields that are time samples and unpack them into a dataframe"""
+        """Select fields that are time samples and unpack them into a dataframe.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        base_fields :  `str` or `list`
+            Base field name(s) that will be expanded to query all
+            vector entries.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `boolean`, optional
+            If set and the end time is specified as a `TimeDelta`,
+            compute a range centered on the start time (default is `False`).
+        index : `int`, optional
+            For indexed topics set this to the index of the topic to query
+            (default is `False`).
+        ref_timestamp_col : `str`, optional
+            Name of the field name to use to assign timestamps to unpacked
+            vector fields (default is 'cRIO_timestamp').
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `pandas.DataFrame` containing the results of the query.
+        """
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):
             base_fields = [base_fields, ]
@@ -201,7 +365,25 @@ class EfdClient:
         return pd.DataFrame(vals, index=timestamps)
 
 
-def resample(df1, df2, sort_type='time'):
+def resample(df1, df2, interp_type='time'):
+    """Resample one DataFrame onto another.
+
+    Parameters
+    ----------
+    df1 : `pandas.DataFrame`
+        First `pandas.DataFrame`.
+    df2 : `pandas.DataFrame`
+        Second `pandas.DataFrame`.
+    interp_type : `str`, optional
+        Type of interpolation to perform (default is 'time').
+
+    Returns
+    -------
+    result : `pandas.DataFrame`
+        The resulting resampling is bi-directional.
+        That is the length of the resulting `pandas.DataFrame` is the
+        sum of the lengths of the inputs.
+    """
     df = df1.append(df2, sort=False)  # Sort in this context does not sort the data
     df = df.sort_index()
-    return df.interpolate(type=sort_type)
+    return df.interpolate(type=interp_type)
