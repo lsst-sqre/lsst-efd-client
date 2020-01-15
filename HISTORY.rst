@@ -6,3 +6,9 @@ History
 ------------------
 
 * First release on PyPI.
+
+0.2.0 (2019-01-15)
+------------------
+
+* Minimal functionality in place.
+* Docstrings complete.
