@@ -14,7 +14,7 @@ requirements = [
                 'numpy>=1.16.0',
                 'aioinflux',
                 'pandas',
-                'astropy', 
+                'astropy',
                 'pyyaml', ]
 
 setup_requirements = [
@@ -29,6 +29,12 @@ setup_requirements = [
                       'pytest-runner', ]
 
 test_requirements = ['pytest>=3', ]
+
+extra_requirements = {
+    'dev': [
+        'documenteer[pipelines]>=0.5.6,<0.6.0'
+    ]
+}
 
 setup(
     author="Simon Krughoff",
@@ -56,6 +62,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
+    extras_require=extra_requirements,
     url='https://github.com/lsst-sqre/lsst-efd-client',
     version='0.2.0',
     zip_safe=False,
