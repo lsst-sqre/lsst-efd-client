@@ -12,6 +12,10 @@ script:
   - make linkcheck
   - make docs
 
+after_success:
+  - pip install ltd-conveyor==0.5.0a1
+  - 'ltd upload --product "efd-client" --travis --dir doc/_build/html'
+
 # Assuming you have installed the travis-ci CLI tool, after you
 # create the Github repo and add it to Travis, run the
 # following command to finish PyPI deployment setup:
@@ -26,3 +30,8 @@ deploy:
     tags: true
     repo: lsst-sqre/lsst-efd-client
     python: 3.7
+
+env:
+  global:
+    # LSST the Docs credentials
+    - secure: "Su0VSKCFW8cPdgCmJx+JP62B0LtDq6lrZvVldtUloO/r4r/w8REmFlJWT27p+dhWEOFKA1n0jrNsKHMrL9nit0nPyF28imFX1tzd2KRHNZ8GAE+fuzfyf3D6Lkd7zoXZ5HiE5eZg5NdF3QUSXdZxv2PZzWbv/egU460h8dvD5K+3m8sypxhbHf6snOzBlFIEKTBlza2uiWxkm2Y9fUv2511kAYmr3WrAYqTbgPM1LKIp6EaC81PwEhqcclnb6FGGW3FhHGOHX49hABkHea8cooStEAr6mFzHvsLyTX5vfPLmBrPfWTTPMyXHOJj4Csuy1RdP47bedt8/VZcxQ3e4meBwmXg0JqiGfAc5HKqMPJGpnja3iFsrrOiPFYCDxdQlNcGfW/3Rhmy4rtixxrw0Eho+gMBQB52F8MuFH/8Ngi1wp5Sbm9TpYc1Yn/taIAPBBHmCUIAra845bnvQY8b3nyxYAsGLfc8S1B1DbbYUQdBpage2Hap2JifIqPZdlPkheLdBp9GargvopTvL01HMxhw3YB6O4FMr/4nz+OdpbxHwmIPApM4q1jMUU3BlQj4XD5OZHn19YWRZVc7agZdm76ftBm0fbQNlbA9agRSJdGHswA6nIGo2ApTbz9RJgoCC68vRLm1g/p7DeKLzPTUU0Whrx873s5qDMNnGYXcOsx8="
