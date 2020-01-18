@@ -76,6 +76,9 @@ default_role = 'py:obj'
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
+    'aioinflux': ('https://aioinflux.readthedocs.io/en/stable/', None),
+    'astropy': ('http://docs.astropy.org/en/v3.0.x/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
 }
 
 # Warnings to ignore
