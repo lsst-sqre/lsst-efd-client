@@ -30,9 +30,9 @@ class EfdClient:
     """
 
     influx_client = None
-    """The `aioinflux.InfluxDBClient` used for queries.
-    This should be used to execute queries not wrapped
-    by this class.
+    """The `aioinflux.client.InfluxDBClient` used for queries.
+
+    This should be used to execute queries not wrapped by this class.
     """
 
     subclasses = {}
@@ -143,9 +143,10 @@ class EfdClient:
         end : `astropy.time.Time` or `astropy.time.TimeDelta`
             End time of the range either as an absolute time or
             a time offset from the start time.
-        is_window : `boolean`, optional
-            If set and the end time is specified as a `TimeDelta`,
-            compute a range centered on the start time (default is `False`).
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
         index : `int`, optional
             For indexed topics set this to the index of the topic to query
             (default is `None`).
@@ -206,9 +207,10 @@ class EfdClient:
         end : `astropy.time.Time` or `astropy.time.TimeDelta`
             End time of the range either as an absolute time or
             a time offset from the start time.
-        is_window : `boolean`, optional
-            If set and the end time is specified as a `TimeDelta`,
-            compute a range centered on the start time (default is `False`).
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
         index : `int`, optional
             For indexed topics set this to the index of the topic to query
             (default is `None`).
@@ -318,9 +320,10 @@ class EfdClient:
         end : `astropy.time.Time` or `astropy.time.TimeDelta`
             End time of the range either as an absolute time or
             a time offset from the start time.
-        is_window : `boolean`, optional
-            If set and the end time is specified as a `TimeDelta`,
-            compute a range centered on the start time (default is `False`).
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
         index : `int`, optional
             For indexed topics set this to the index of the topic to query
             (default is `False`).

@@ -6,4 +6,4 @@ from .auth_helper import NotebookAuth
 from .efd_helper import EfdClient
 from .efd_utils import resample
 
-__all__ = [NotebookAuth, EfdClient, resample]
+__all__ = ['NotebookAuth', 'EfdClient', 'resample']

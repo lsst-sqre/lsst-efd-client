@@ -7,7 +7,7 @@ LSST EFD Client
            :target: https://pypi.python.org/pypi/lsst-efd-client
 
 .. image:: https://img.shields.io/travis/lsst-sqre/lsst-efd-client.svg
-           :target: https://travis-ci.org/lsst-sqre/lsst-efd-client
+           :target: https://travis-ci.com/lsst-sqre/lsst-efd-client
 
 
 

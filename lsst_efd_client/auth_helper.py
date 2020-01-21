@@ -8,10 +8,10 @@ import yaml
 
 class NotebookAuth:
     """Class to help keep authentication credentials secret.
-    Credentials can be passed directly in a dictionary,
-    the name of an environment variable that contains the path
-    to the credentials file may be passed, or a path
-    to the file may be passed directly.  The credential
+
+    Credentials can be passed directly in a dictionary, the name of an
+    environment variable that contains the path to the credentials file may be
+    passed, or a path to the file may be passed directly.  The credential
     location is checked in that order.
 
     Parameters
@@ -31,7 +31,7 @@ class NotebookAuth:
     Raises
     ------
     ValueError
-       Raised if `auth_dict`, `env_var`, and `path` are all `None`.
+       Raised if ``auth_dict``, ``env_var``, and ``path`` are all `None`.
     IOError
        Raised if either the credentials file has the wrong permissions or
        if the file fails to load.
