@@ -35,6 +35,7 @@ Using lsst_efd_client
    :maxdepth: 2
 
    getting-started
+   history
 
 .. _py-api:
 
