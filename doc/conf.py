@@ -25,6 +25,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
+    'sphinx-prompt',
     'numpydoc',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.smart_resolver',

@@ -34,6 +34,7 @@ Using lsst_efd_client
 .. toctree::
    :maxdepth: 2
 
+   getting-started
 
 .. _py-api:
 
