@@ -33,9 +33,9 @@ See example notebooks here_.
 
 .. _here: https://github.com/lsst-sqre/notebook-demo/tree/master/experiments/efd
 
-For more information see the online docs_.
+For more information, see the online docs_.
 
-.. _docs: https://efd-client.lsst.codes
+.. _docs: https://efd-client.lsst.io
 
 Authentication
 --------------
