@@ -63,6 +63,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extra_requirements,
     url='https://github.com/lsst-sqre/lsst-efd-client',
-    version='0.2.0',
+    version='0.2.1',
     zip_safe=False,
 )
