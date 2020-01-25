@@ -228,7 +228,7 @@ class EfdClient:
             ret = pd.DataFrame()
         return ret
 
-    async def select_top_n(self, topic_name, fields, num):
+    async def select_top_n(self, topic_name, fields, num, index=None):
         """Select the most recent N samples from a set of topics in a single subsystem.
         This method does not guarantee sort direction of the returned rows.
 
@@ -240,6 +240,9 @@ class EfdClient:
             Name of field(s) to query.
         num : `int`
             Number of rows to return.
+        index : `int`, optional
+            For indexed topics set this to the index of the topic to query
+            (default is `None`)
 
         Returns
         -------
@@ -250,6 +253,12 @@ class EfdClient:
         # The "GROUP BY" is necessary to return the tags
         limit = f"GROUP BY * ORDER BY DESC LIMIT {num}"
 
+        # Deal with index
+        istr = ''
+        if index:
+            parts = topic_name.split('.')
+            istr = f' WHERE {parts[-2]}ID = {index}'  # The CSC name is always the penultimate
+
         if isinstance(fields, str):
             fields = [fields, ]
         elif isinstance(fields, bytes):
@@ -257,7 +266,7 @@ class EfdClient:
             fields = [fields, ]
 
         # Build query here
-        query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" {limit}'
+        query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}"{istr} {limit}'
 
         # Do query
         ret = await self._do_query(query)
