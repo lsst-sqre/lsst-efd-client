@@ -15,7 +15,8 @@ requirements = [
                 'aioinflux',
                 'pandas',
                 'astropy',
-                'pyyaml', ]
+                'pyyaml',
+                'tables', ]
 
 setup_requirements = [
                       'pip==19.2.3',
@@ -27,7 +28,7 @@ setup_requirements = [
                       'twine==1.14.0',
                       'pytest-runner', ]
 
-test_requirements = ['pytest>=3', ]
+test_requirements = ['pytest>=3', 'pytest-asyncio']
 
 extra_requirements = {
     'dev': [

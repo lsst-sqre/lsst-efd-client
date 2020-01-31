@@ -1,0 +1,4 @@
+SELECT foo FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE time >= '2020-01-28T23:07:19.000Z' AND time <= '2020-01-28T23:17:19.000Z'
+SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE time >= '2020-01-28T23:07:19.000Z' AND time <= '2020-01-28T23:17:19.000Z'
+SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE time >= '2020-01-28T23:07:19.000Z' AND time <= '2020-01-28T23:11:29.000Z'
+SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE time >= '2020-01-28T23:05:14.000Z' AND time <= '2020-01-28T23:09:24.000Z'

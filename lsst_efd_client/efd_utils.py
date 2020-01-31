@@ -1,6 +1,7 @@
 """Free functions to help out with EFD operations.
 """
 
+
 def resample(df1, df2, interp_type='time'):
     """Resample one DataFrame onto another.
 
@@ -23,4 +24,3 @@ def resample(df1, df2, interp_type='time'):
     df = df1.append(df2, sort=False)  # Sort in this context does not sort the data
     df = df.sort_index()
     return df.interpolate(type=interp_type)
-

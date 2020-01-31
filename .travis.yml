@@ -4,8 +4,16 @@ language: python
 python:
   - 3.7
 
+services:
+  - docker
+
 # Command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -r requirements.txt
+
+before_install:
+  - chmod 600 tests/test_creds.yaml  # perms must be just so
+  - docker pull influxdb
+  - docker run -d -p 8086:8086 -v influxdb:/var/lib/influxdb influxdb:1.7.6-alpine
 
 script:
   - python setup.py test
