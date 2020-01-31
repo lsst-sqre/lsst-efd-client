@@ -12,3 +12,8 @@ History
 
 * Minimal functionality in place.
 * Docstrings complete.
+
+0.3.0 (2019-01-31)
+------------------
+
+* Unit tests added.
