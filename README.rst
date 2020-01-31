@@ -64,6 +64,10 @@ Currently, my file looks like this:
     password: <passwd>
     host: "influxdb-summit-efd.lsst.codes"
 
+CONTRIBUTING
+------------
+.. include:: CONTRIBUTING.rst
+
 Credits
 -------
 
