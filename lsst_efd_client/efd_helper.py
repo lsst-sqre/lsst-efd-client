@@ -27,6 +27,9 @@ class EfdClient:
     path_to_creds : `str`, optional
         Absolute path to use when reading credentials from disk
         ('~/.lsst/notebook_auth.yaml' by default).
+    client : `object`, optional
+        An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
+        The intent is to be able to substitute a mocked client for testing.
     """
 
     influx_client = None
@@ -39,19 +42,23 @@ class EfdClient:
     deployment = ''
 
     def __init__(self, efd_name, db_name='efd', port='443',
-                 internal_scale='tai', path_to_creds='~/.lsst/notebook_auth.yaml'):
+                 internal_scale='tai', path_to_creds='~/.lsst/notebook_auth.yaml',
+                 client=None):
         self.db_name = db_name
         self.internal_scale = internal_scale
         self.auth = NotebookAuth(path=path_to_creds)
         host, user, password = self.auth.get_auth(efd_name)
-        self.influx_client = aioinflux.InfluxDBClient(host=host,
-                                                      port=port,
-                                                      ssl=True,
-                                                      username=user,
-                                                      password=password,
-                                                      db=db_name,
-                                                      mode='async')  # mode='blocking')
-        self.influx_client.output = 'dataframe'
+        if client is None:
+            self.influx_client = aioinflux.InfluxDBClient(host=host,
+                                                          port=port,
+                                                          ssl=True,
+                                                          username=user,
+                                                          password=password,
+                                                          db=db_name,
+                                                          mode='async')  # mode='blocking')
+            self.influx_client.output = 'dataframe'
+        else:
+            self.influx_client = client
         self.query_history = []
 
     @classmethod
