@@ -69,7 +69,7 @@ CONTRIBUTING
 
 For information on contributing to this project see this_ page.
 
-.. _this: https://github.com/lsst-sqre/lsst-efd-client/CONTRIBUTING.rst
+.. _this: https://github.com/lsst-sqre/lsst-efd-client/blob/master/CONTRIBUTING.rst
 
 Credits
 -------
