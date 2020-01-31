@@ -66,7 +66,10 @@ Currently, my file looks like this:
 
 CONTRIBUTING
 ------------
-.. include:: CONTRIBUTING.rst
+
+For information on contributing to this project see this_ page.
+
+.. _this: https://github.com/lsst-sqre/lsst-efd-client/CONTRIBUTING.rst
 
 Credits
 -------
