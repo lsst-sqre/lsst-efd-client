@@ -17,3 +17,9 @@ History
 ------------------
 
 * Unit tests added.
+
+0.4.0 (2019-01-31)
+------------------
+
+* Very minor doc updates.
+* Accidently pushed minor version when patch was meant.
