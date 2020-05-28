@@ -19,7 +19,7 @@ def auth_client():
 
     See more at: http://doc.pytest.org/en/latest/fixture.html
     """
-    return NotebookAuth(path=PATH/'test_creds.yaml').get_auth('test_efd')
+    return NotebookAuth(service_endpoint=None, path=PATH/'test_creds.yaml').get_auth('test_efd')
 
 
 @pytest.fixture
