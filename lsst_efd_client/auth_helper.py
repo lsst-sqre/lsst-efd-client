@@ -82,6 +82,18 @@ class NotebookAuth:
                 self.auth_dict[alias]['password'])
 
     def get_auth_by_service(self, alias):
+        """Return the credentials as a tuple
+
+        Parameters
+        ----------
+        alias : `str`
+            Name of the authenticator.
+
+        Returns
+        -------
+        credentials : `tuple`
+            A tuple containing the host name, user name, and password.
+        """
         response = requests.get(urljoin(self.service_endpoint, f"creds/{alias}"))
         if response.status_code == 200:
             data = response.json()
@@ -93,8 +105,22 @@ class NotebookAuth:
             raise RuntimeError(f"Server returned {response.status_code}.")
 
     def list_auth_by_dict(self):
+        """Return a list of possible credential aliases
+        Returns
+        -------
+        aliases : `list`
+            A tuple of `str` that indicate valid aliases to use to retrieve
+            credentials.
+        """
         return list(self.auth_dict.keys())
 
     def list_auth_by_service(self):
+        """Return a list of possible credential aliases
+        Returns
+        -------
+        aliases : `list`
+            A tuple of `str` that indicate valid aliases to use to retrieve
+            credentials.
+        """
         response = requests.get(urljoin(self.service_endopint, "list"))
         return response.json()
