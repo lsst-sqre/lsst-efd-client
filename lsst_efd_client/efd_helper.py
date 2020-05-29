@@ -42,11 +42,11 @@ class EfdClient:
     deployment = ''
 
     def __init__(self, efd_name, db_name='efd', port='443',
-                 internal_scale='tai', path_to_creds='~/.lsst/notebook_auth.yaml',
+                 internal_scale='tai', creds_service='https://roundtable.lsst.codes/segwarides/',
                  client=None):
         self.db_name = db_name
         self.internal_scale = internal_scale
-        self.auth = NotebookAuth(path=path_to_creds)
+        self.auth = NotebookAuth(service_endpoint=creds_service)
         host, user, password = self.auth.get_auth(efd_name)
         if client is None:
             self.influx_client = aioinflux.InfluxDBClient(host=host,

@@ -28,7 +28,7 @@ setup_requirements = [
                       'twine==1.14.0',
                       'pytest-runner', ]
 
-test_requirements = ['pytest>=3', 'pytest-asyncio']
+test_requirements = ['pytest>=3', 'pytest-asyncio', 'pytest-vcr']
 
 extra_requirements = {
     'dev': [
@@ -64,6 +64,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extra_requirements,
     url='https://github.com/lsst-sqre/lsst-efd-client',
-    version='0.4.1',
+    version='0.5.0',
     zip_safe=False,
 )
