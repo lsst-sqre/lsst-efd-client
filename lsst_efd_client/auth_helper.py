@@ -18,7 +18,7 @@ class NotebookAuth:
     ----------
     service_endpoint : `str`, optional
         Endopint of the service to use for credentials.
-        (https://roundtable.lsst.codes/segwarides by default)
+        (https://roundtable.lsst.codes/segwarides/ by default)
     path : `str`, optional
         Path to use when reading credentials from disk
         ('~/.lsst/notebook_auth.yaml' by default).
