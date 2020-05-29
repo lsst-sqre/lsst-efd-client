@@ -28,7 +28,7 @@ async def efd_client():
     async with InfluxDBClient(db='client_test', mode='async', output='dataframe') as client:
         await client.create_database()
         await client.write(df, measurement='lsst.sal.fooSubSys.test')
-        efd_client = EfdClient('test_efd', db_name='client_test',
+        efd_client = EfdClient('test_efd', db_name='client_test', creds_service=None,
                                path_to_creds=PATH/'test_creds.yaml', client=client)
         yield efd_client
         await client.drop_database()
@@ -56,7 +56,7 @@ def start_stop():
 
 def test_auth_badperms():
     with pytest.raises(IOError):
-        NotebookAuth(path=PATH/'test_creds_badperms.yaml')
+        NotebookAuth(service_endpoint=None, path=PATH/'test_creds_badperms.yaml')
 
 
 def test_auth_host(auth_client):
