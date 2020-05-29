@@ -37,33 +37,6 @@ For more information, see the online docs_.
 
 .. _docs: https://efd-client.lsst.io
 
-Authentication
---------------
-
-Credentials for authenticating to available EFDs are held in a special file on disk.
-By default, this location is `~/.lsst/notebook_auth.yaml`.
-The file must exist and must have `600` permissions set.
-To set the correct permissions execute the following command in a shell:
-
-.. code:: bash
-
-  chmod 600 ~/.lsst/notebook_auth.yaml
-
-The format of the file is a YAML dictionary of valid EFD names.
-Each EFD entry should contain the username, password, and host for the EFD.
-Currently, my file looks like this:
-
-.. code-block:: yaml
-
-  lab_efd:
-    username: <user>
-    password: <passwd>
-    host: "test-influxdb-efd.lsst.codes"
-  summit_efd:
-    username: <user>
-    password: <passwd>
-    host: "influxdb-summit-efd.lsst.codes"
-
 CONTRIBUTING
 ------------
 
