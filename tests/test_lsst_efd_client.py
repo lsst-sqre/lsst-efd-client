@@ -19,17 +19,17 @@ def auth_client():
 
     See more at: http://doc.pytest.org/en/latest/fixture.html
     """
-    return NotebookAuth(service_endpoint=None, path=PATH/'test_creds.yaml').get_auth('test_efd')
+    return NotebookAuth().get_auth('test_efd')
 
 
 @pytest.fixture
+@pytest.mark.vcr
 async def efd_client():
     df = pd.read_hdf(PATH/'efd_test.hdf')
     async with InfluxDBClient(db='client_test', mode='async', output='dataframe') as client:
         await client.create_database()
         await client.write(df, measurement='lsst.sal.fooSubSys.test')
-        efd_client = EfdClient('test_efd', db_name='client_test', creds_service=None,
-                               path_to_creds=PATH/'test_creds.yaml', client=client)
+        efd_client = EfdClient('test_efd', db_name='client_test', client=client)
         yield efd_client
         await client.drop_database()
 
@@ -54,23 +54,27 @@ def start_stop():
     return (time, time + TimeDelta(600, format='sec'))
 
 
-def test_auth_badperms():
+def test_bad_endpoint():
     with pytest.raises(IOError):
-        NotebookAuth(service_endpoint=None, path=PATH/'test_creds_badperms.yaml')
+        NotebookAuth(service_endpoint="https://no.path.here.net.gov")
 
 
+@pytest.mark.vcr
 def test_auth_host(auth_client):
     assert auth_client[0] == 'foo.bar.baz.net'
 
 
+@pytest.mark.vcr
 def test_auth_user(auth_client):
     assert auth_client[1] == 'foo'
 
 
+@pytest.mark.vcr
 def test_auth_password(auth_client):
     assert auth_client[2] == 'bar'
 
 
+@pytest.mark.vcr
 def test_build_query(efd_client, start_stop, expected_strs):
     # Check passing a single field works
     qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', 'foo',
@@ -82,6 +86,7 @@ def test_build_query(efd_client, start_stop, expected_strs):
     assert qstr == expected_strs[1].strip()
 
 
+@pytest.mark.vcr
 def test_build_query_delta(efd_client, start_stop, expected_strs):
     tdelta = TimeDelta(250, format='sec')
     # Check passing a time delta works
@@ -95,6 +100,7 @@ def test_build_query_delta(efd_client, start_stop, expected_strs):
 
 
 @pytest.mark.asyncio
+@pytest.mark.vcr
 async def test_topics(efd_client):
     topics = await efd_client.get_topics()
     assert len(topics) == 1
@@ -102,6 +108,7 @@ async def test_topics(efd_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.vcr
 async def test_fields(efd_client, test_df):
     columns = await efd_client.get_fields('lsst.sal.fooSubSys.test')
     for c in test_df.columns:
@@ -109,6 +116,7 @@ async def test_fields(efd_client, test_df):
 
 
 @pytest.mark.asyncio
+@pytest.mark.vcr
 async def test_time_series(efd_client, start_stop):
     df = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], start_stop[1])
@@ -118,6 +126,7 @@ async def test_time_series(efd_client, start_stop):
 
 
 @pytest.mark.asyncio
+@pytest.mark.vcr
 async def test_top_n(efd_client, start_stop):
     df = await efd_client.select_top_n('lsst.sal.fooSubSys.test', ['foo', 'bar'], 10)
     assert len(df) == 10
@@ -126,6 +135,7 @@ async def test_top_n(efd_client, start_stop):
 
 
 @pytest.mark.asyncio
+@pytest.mark.vcr
 async def test_packed_time_series(efd_client, start_stop):
     df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg'],
                                                     start_stop[0], start_stop[1])

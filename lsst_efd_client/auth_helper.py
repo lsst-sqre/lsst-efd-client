@@ -19,69 +19,22 @@ class NotebookAuth:
     service_endpoint : `str`, optional
         Endopint of the service to use for credentials.
         (https://roundtable.lsst.codes/segwarides/ by default)
-    path : `str`, optional
-        Path to use when reading credentials from disk
-        ('~/.lsst/notebook_auth.yaml' by default).
 
     Raises
     ------
-    ValueError
-       Raised if the auth file is absent or if ``path`` and ``service_endpoint``
-       are both `None`.
-    IOError
-       Raised if either the credentials file has the wrong permissions or
-       if the file fails to load.
+    RuntimeError
+        Raised if teh service returns a non-200 status code.
     """
 
-    def __init__(self, service_endpoint="https://roundtable.lsst.codes/segwarides/", path='~/.lsst/notebook_auth.yaml'):
-        if service_endpoint is not None:
-            response = requests.get(service_endpoint)
-            if response.status_code == 200:
-                self.get_auth = self.get_auth_by_service
-                self.list_auth = self.list_auth_by_service
-                self.service_endpoint = service_endpoint
-            else:
-                self.service_endpoint = None
-        elif path is not None:
-            secret_path = os.path.expanduser(path)
-            if not os.path.isfile(secret_path):
-                raise ValueError("No auth file at: {}".format(secret_path))
-            mode = os.stat(secret_path).st_mode
-            if stat.S_IMODE(mode) != 0o600:
-                raise IOError(
-                    f"Auth file {secret_path} has incorrect permissions: "
-                    f"{oct(stat.S_IMODE(mode))}. Must be 0o600 instead.")
-
-            try:
-                with open(secret_path) as secret_file:
-                    self.auth_dict = yaml.safe_load(secret_file)
-                self.get_auth = self.get_auth_by_dict
-                self.list_auth = self.list_auth_by_dict
-            except Exception as exc:
-                raise IOError(
-                    "Unable to load auth file: " +
-                    secret_path) from exc
+    def __init__(self, service_endpoint="https://roundtable.lsst.codes/segwarides/"):
+        response = requests.get(service_endpoint)
+        if response.status_code == 200:
+            self.service_endpoint = service_endpoint
         else:
-            raise VlaueError("No mechanism for providing credentials provided. "
-                             "Please specify either service_endpoint or path")
+            raise RuntimeError(f"Credential service at {service_endpoint} failed with Error "
+                               f"{response.status_code}.")
 
-    def get_auth_by_dict(self, alias):
-        """Return the credentials as a tuple
-
-        Parameters
-        ----------
-        alias : `str`
-            Name of the authenticator.
-
-        Returns
-        -------
-        credentials : `tuple`
-            A tuple containing the host name, user name, and password.
-        """
-        return (self.auth_dict[alias]['host'], self.auth_dict[alias]['username'],
-                self.auth_dict[alias]['password'])
-
-    def get_auth_by_service(self, alias):
+    def get_auth(self, alias):
         """Return the credentials as a tuple
 
         Parameters
@@ -104,17 +57,7 @@ class NotebookAuth:
         else:
             raise RuntimeError(f"Server returned {response.status_code}.")
 
-    def list_auth_by_dict(self):
-        """Return a list of possible credential aliases
-        Returns
-        -------
-        aliases : `list`
-            A tuple of `str` that indicate valid aliases to use to retrieve
-            credentials.
-        """
-        return list(self.auth_dict.keys())
-
-    def list_auth_by_service(self):
+    def list_auth(self):
         """Return a list of possible credential aliases
         Returns
         -------

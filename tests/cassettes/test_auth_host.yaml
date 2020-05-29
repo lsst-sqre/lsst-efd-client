@@ -1,0 +1,69 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: https://roundtable.lsst.codes/segwarides/
+  response:
+    body:
+      string: '{"_metadata": {"name": "segwarides", "version": "0.2.0", "description":
+        "A simple app to serve credentials to other services.", "repository_url":
+        "https://github.com/lsst-sqre/segwarides", "documentation_url": "https://github.com/lsst-sqre/segwarides"}}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '253'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 29 May 2020 21:47:43 GMT
+      Server:
+      - nginx/1.17.7
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
+  response:
+    body:
+      string: '{"host": "foo.bar.baz.net", "username": "foo", "password":
+        "bar"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '90'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 29 May 2020 21:47:44 GMT
+      Server:
+      - nginx/1.17.7
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+    status:
+      code: 200
+      message: OK
+version: 1
