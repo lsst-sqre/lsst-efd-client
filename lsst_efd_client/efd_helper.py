@@ -50,7 +50,8 @@ class EfdClient:
         self.auth = NotebookAuth(service_endpoint=creds_service)
         host, user, password = self.auth.get_auth(efd_name)
         if client is None:
-            response = requests.get('https://'+host+'/'+'health')
+            health_url = f'https://{host}/health'
+            response = requests.get(health_url)
             if response.status_code != 200:
                 raise RuntimeError(f'InfluxDB server, {host}, does not appear ready to '
                                    f'recieve queries.  Recieved code:{response.status_code} '
