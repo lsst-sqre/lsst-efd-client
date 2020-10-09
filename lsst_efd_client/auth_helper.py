@@ -1,9 +1,6 @@
 """Authentication helpers
 """
 
-import os
-import stat
-import yaml
 import requests
 from urllib.parse import urljoin
 
@@ -11,7 +8,7 @@ from urllib.parse import urljoin
 class NotebookAuth:
     """Class to help keep authentication credentials secret.
 
-    Credentials can be retrieved either from a service endopint or 
+    Credentials can be retrieved either from a service endopint or
     from a file on disk.  The credential location is checked in that order.
 
     Parameters
