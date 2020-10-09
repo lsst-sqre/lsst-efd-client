@@ -65,5 +65,5 @@ class NotebookAuth:
             A tuple of `str` that indicate valid aliases to use to retrieve
             credentials.
         """
-        response = requests.get(urljoin(self.service_endopint, "list"))
+        response = requests.get(urljoin(self.service_endpoint, "list"))
         return response.json()

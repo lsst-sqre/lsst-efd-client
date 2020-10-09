@@ -14,12 +14,19 @@ PATH = pathlib.Path(__file__).parent.absolute()
 
 
 @pytest.fixture
-def auth_client():
-    """Sample pytest fixture to construct an auth helper to run tests on.
+def auth_creds():
+    """Sample pytest fixture to construct credentials to run tests on.
 
     See more at: http://doc.pytest.org/en/latest/fixture.html
     """
     return NotebookAuth().get_auth('test_efd')
+
+
+@pytest.fixture
+def auth_client():
+    """Sample pytest fixture to construct an auth helper to run tests on.
+    """
+    return NotebookAuth()
 
 
 @pytest.fixture
@@ -60,18 +67,34 @@ def test_bad_endpoint():
 
 
 @pytest.mark.vcr
-def test_auth_host(auth_client):
-    assert auth_client[0] == 'foo.bar.baz.net'
+def test_auth_host(auth_creds):
+    assert auth_creds[0] == 'foo.bar.baz.net'
 
 
 @pytest.mark.vcr
-def test_auth_user(auth_client):
-    assert auth_client[1] == 'foo'
+def test_auth_user(auth_creds):
+    assert auth_creds[1] == 'foo'
 
 
 @pytest.mark.vcr
-def test_auth_password(auth_client):
-    assert auth_client[2] == 'bar'
+def test_auth_password(auth_creds):
+    assert auth_creds[2] == 'bar'
+
+
+@pytest.mark.vcr
+def test_auth_list(auth_client):
+    #Make sure there is at least one set of credentials
+    #other than the test one used here
+    assert len(auth_client.list_auth()) > 1
+
+
+@pytest.mark.vcr
+def test_efd_names(auth_client):
+    #Don't assume same order in case we change
+    #the backend to something that doesn't 
+    #guarantee that
+    for name in EfdClient.list_efd_names():
+        assert name in auth_client.list_auth()
 
 
 @pytest.mark.vcr

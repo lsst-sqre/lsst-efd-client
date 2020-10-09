@@ -70,6 +70,10 @@ class EfdClient:
             raise ValueError(f'Class for mode, {cls.mode}, already defined')
         EfdClient.subclasses[cls.deployment] = cls
 
+    @classmethod
+    def list_efd_names(cls, creds_service='https://roundtable.lsst.codes/segwarides/'):
+        return NotebookAuth(service_endpoint=creds_service).list_auth()
+
     def from_name(self, efd_name, *args, **kwargs):
         """Construct a client for the specific named subclass.
 
