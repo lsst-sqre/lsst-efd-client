@@ -2,6 +2,7 @@
 
 """Tests for `lsst_efd_client` package."""
 
+import numpy
 import pandas as pd
 import pytest
 from astropy.time import Time, TimeDelta
@@ -160,9 +161,11 @@ async def test_top_n(efd_client, start_stop):
 @pytest.mark.asyncio
 @pytest.mark.vcr
 async def test_packed_time_series(efd_client, start_stop):
+    df_exp = pd.read_pickle(PATH/'packed_data.pkl')
     df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg'],
                                                     start_stop[0], start_stop[1])
-    assert len(df) == 6000
+    assert numpy.all((df.index[1:] - df.index[:-1]).total_seconds()>0)
+    assert numpy.all(df == df_exp)
     for c in ['ham', 'egg']:
         assert c in df.columns
 
