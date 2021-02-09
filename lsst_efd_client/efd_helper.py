@@ -9,6 +9,7 @@ import pandas as pd
 from astropy.time import Time, TimeDelta
 
 from .auth_helper import NotebookAuth
+from .efd_utils import merge_packed_time_series
 
 
 class EfdClient:
@@ -375,21 +376,9 @@ class EfdClient:
             field_list += qfields[k]
         result = await self.select_time_series(topic_name, field_list+[ref_timestamp_col, ],
                                                start, end, is_window=is_window, index=index)
-        times = []
-        timestamps = []
         vals = {}
-        step = 1./els
-        for tstamp, row in result.iterrows():  # for large numbers of columns itertuples doesn't work
-            t = getattr(row, ref_timestamp_col)
-            for i in range(els):
-                times.append(t + i*step)
-                # We need to convert to something bokeh knows about.
-                timestamps.append((Time(t, format='unix', scale=self.internal_scale) +
-                                   TimeDelta(i*step, format='sec')).datetime64)
-                for k in qfields:
-                    fld = f'{k}{i}'
-                    if fld not in qfields[k]:
-                        raise ValueError(f'{fld} not in field list')
-                    vals.setdefault(k, []).append(getattr(row, fld))
-        vals.update({'times': times})
-        return pd.DataFrame(vals, index=timestamps)
+        for field in base_fields:
+            df = merge_packed_time_series(result, field)
+            vals[field] = df[field]
+        vals.update({'times': df['times']})
+        return pd.DataFrame(vals, index=df.index)
