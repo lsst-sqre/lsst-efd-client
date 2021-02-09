@@ -378,7 +378,8 @@ class EfdClient:
                                                start, end, is_window=is_window, index=index)
         vals = {}
         for field in base_fields:
-            df = merge_packed_time_series(result, field)
+            df = merge_packed_time_series(result, field, ref_timestamp_col=ref_timestamp_col,
+                                          internal_time_scale=self.internal_scale)
             vals[field] = df[field]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
