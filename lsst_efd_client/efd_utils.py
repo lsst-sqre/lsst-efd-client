@@ -76,3 +76,26 @@ def resample(df1, df2, interp_type='time'):
     df = df1.append(df2, sort=False)  # Sort in this context does not sort the data
     df = df.sort_index()
     return df.interpolate(type=interp_type)
+
+
+def rendezvous_dataframes(left, right, direction='backward', tolerance=pandas.Timedelta(days=20), **kwargs):
+    """Each record in ``left`` will be extended with a corresponding record in ``right`` if one exists.
+       By default, the record in ``right`` will be the most recent record in the past.  The other options
+       are the closest record in the future and the nearest overall.
+
+    Parameters
+    ----------
+    left: `pandas.DataFrame`
+        The `pandas.DataFrame` to extend
+    right: `pandas.DataFrame`
+        The `pandas.DataFrame` to rendezvous with ``left``
+    direction: `str`
+        The direction to search for the nearest record.  Default is ``backward``.
+        The other options are ``forward`` and ``nearest``.
+    tolerance: `pandas.Timedelta`
+        The to,e window to search for the matching record
+    kwargs: `dict`
+        Additional keyword arguments will be forwarded to the `pandas.merge_asof` function
+    """
+    return pandas.merge_asof(left, right, left_index=True, right_index=True, tolerance=tolerance,
+                             direction=direction, **kwargs)

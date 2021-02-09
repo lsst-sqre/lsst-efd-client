@@ -9,7 +9,7 @@ from astropy.time import Time, TimeDelta
 from aioinflux import InfluxDBClient
 import pathlib
 
-from lsst_efd_client import NotebookAuth, EfdClient, resample
+from lsst_efd_client import NotebookAuth, EfdClient, resample, rendezvous_dataframes
 
 PATH = pathlib.Path(__file__).parent.absolute()
 
@@ -179,3 +179,21 @@ def test_resample(test_df):
     df_copy.set_index(df_copy['tstamp'] + pd.Timedelta(0.5, unit='s'), inplace=True)
     df_out = resample(test_df, df_copy)
     assert len(df_out) == 2*len(test_df)
+
+
+def test_rendezvous(test_df):
+    sub = test_df.iloc[[25, 75], :]
+    # this makes sure the index is not the same, which is the
+    # point of this helper method
+    sub.set_index(sub.index + pd.Timedelta(0.5, unit='s'), inplace=True)
+    merged = rendezvous_dataframes(test_df, sub)
+    for i, rec in enumerate(merged.iterrows()):
+        if i < 26:
+            assert numpy.isnan(rec[1]['ham0_y'])
+            assert numpy.isnan(rec[1]['egg0_y'])
+        elif i > 25 and i < 76:
+            assert rec[1]['ham0_y'] == sub['ham0'][0]
+            assert rec[1]['egg0_y'] == sub['egg0'][0]
+        elif i > 75:
+            assert rec[1]['ham0_y'] == sub['ham0'][1]
+            assert rec[1]['egg0_y'] == sub['egg0'][1]
