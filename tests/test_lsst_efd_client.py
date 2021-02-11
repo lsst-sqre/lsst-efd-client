@@ -2,13 +2,14 @@
 
 """Tests for `lsst_efd_client` package."""
 
+import numpy
 import pandas as pd
 import pytest
 from astropy.time import Time, TimeDelta
 from aioinflux import InfluxDBClient
 import pathlib
 
-from lsst_efd_client import NotebookAuth, EfdClient, resample
+from lsst_efd_client import NotebookAuth, EfdClient, resample, rendezvous_dataframes
 
 PATH = pathlib.Path(__file__).parent.absolute()
 
@@ -83,16 +84,16 @@ def test_auth_password(auth_creds):
 
 @pytest.mark.vcr
 def test_auth_list(auth_client):
-    #Make sure there is at least one set of credentials
-    #other than the test one used here
+    # Make sure there is at least one set of credentials
+    # other than the test one used here
     assert len(auth_client.list_auth()) > 1
 
 
 @pytest.mark.vcr
 def test_efd_names(auth_client):
-    #Don't assume same order in case we change
-    #the backend to something that doesn't 
-    #guarantee that
+    # Don't assume same order in case we change
+    # the backend to something that doesn't
+    # guarantee that
     for name in EfdClient.list_efd_names():
         assert name in auth_client.list_auth()
 
@@ -160,9 +161,15 @@ async def test_top_n(efd_client, start_stop):
 @pytest.mark.asyncio
 @pytest.mark.vcr
 async def test_packed_time_series(efd_client, start_stop):
+    df_exp = pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
     df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg'],
                                                     start_stop[0], start_stop[1])
-    assert len(df) == 6000
+    assert numpy.all((df.index[1:] - df.index[:-1]).total_seconds() > 0)
+    assert numpy.all(df == df_exp)
+    assert numpy.all(df.index == df_exp.index)
+    assert numpy.all(df['ham'] == df_exp['ham'])
+    assert numpy.all(df['egg'] == df_exp['egg'])
+    assert numpy.all(df['times'] == df_exp['times'])
     for c in ['ham', 'egg']:
         assert c in df.columns
 
@@ -172,3 +179,21 @@ def test_resample(test_df):
     df_copy.set_index(df_copy['tstamp'] + pd.Timedelta(0.5, unit='s'), inplace=True)
     df_out = resample(test_df, df_copy)
     assert len(df_out) == 2*len(test_df)
+
+
+def test_rendezvous(test_df):
+    sub = test_df.iloc[[25, 75], :]
+    # this makes sure the index is not the same, which is the
+    # point of this helper method
+    sub.set_index(sub.index + pd.Timedelta(0.5, unit='s'), inplace=True)
+    merged = rendezvous_dataframes(test_df, sub)
+    for i, rec in enumerate(merged.iterrows()):
+        if i < 26:
+            assert numpy.isnan(rec[1]['ham0_y'])
+            assert numpy.isnan(rec[1]['egg0_y'])
+        elif i > 25 and i < 76:
+            assert rec[1]['ham0_y'] == sub['ham0'][0]
+            assert rec[1]['egg0_y'] == sub['egg0'][0]
+        elif i > 75:
+            assert rec[1]['ham0_y'] == sub['ham0'][1]
+            assert rec[1]['egg0_y'] == sub['egg0'][1]

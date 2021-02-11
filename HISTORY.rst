@@ -23,3 +23,14 @@ History
 
 * Very minor doc updates.
 * Accidently pushed minor version when patch was meant.
+
+0.5.0 (2020-05-29)
+------------------
+
+* Switch to the segwarides based credentials.
+
+0.6.0 (2021-02-11)
+------------------
+
+* Fix bug in listing possible endpoints
+* Add some utility functionality and speed up unpacking packed time series (thank you RHL)
