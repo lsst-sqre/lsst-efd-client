@@ -162,14 +162,10 @@ async def test_top_n(efd_client, start_stop):
 @pytest.mark.vcr
 async def test_packed_time_series(efd_client, start_stop):
     df_exp = pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
-    df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg'],
+    df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg', 'hamegg'],
                                                     start_stop[0], start_stop[1])
     assert numpy.all((df.index[1:] - df.index[:-1]).total_seconds() > 0)
     assert numpy.all(df == df_exp)
-    assert numpy.all(df.index == df_exp.index)
-    assert numpy.all(df['ham'] == df_exp['ham'])
-    assert numpy.all(df['egg'] == df_exp['egg'])
-    assert numpy.all(df['times'] == df_exp['times'])
     for c in ['ham', 'egg']:
         assert c in df.columns
 
