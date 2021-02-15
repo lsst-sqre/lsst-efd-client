@@ -34,3 +34,9 @@ History
 
 * Fix bug in listing possible endpoints
 * Add some utility functionality and speed up unpacking packed time series (thank you RHL)
+
+0.6.4 (2021-02-15)
+------------------
+
+* Fix a regression that causes an exception when the name of one column is the same as the start of the name of another column
+* Add a test for the regression
