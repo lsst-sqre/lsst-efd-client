@@ -2,15 +2,15 @@
 """
 
 import aiohttp
+import aioinflux
+from astropy.time import Time, TimeDelta
 import astropy.units as u
 from dataclasses import dataclass, field
-from kafkit.registry.aiohttp import RegistryApi
-import aioinflux
-import requests
 from functools import partial
+from kafkit.registry.aiohttp import RegistryApi
 import logging
 import pandas as pd
-from astropy.time import Time, TimeDelta
+import requests
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
