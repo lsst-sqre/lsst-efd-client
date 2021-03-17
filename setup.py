@@ -16,7 +16,8 @@ requirements = [
                 'pandas',
                 'astropy',
                 'pyyaml',
-                'tables', ]
+                'tables', 
+                'kafkit', ]
 
 setup_requirements = [
                       'pip==19.2.3',
