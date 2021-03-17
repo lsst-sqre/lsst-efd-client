@@ -1,6 +1,10 @@
 """EFD client class
 """
 
+import aiohttp
+import astropy.units as u
+from dataclasses import dataclass, field
+from kafkit.registry.aiohttp import RegistryApi
 import aioinflux
 import requests
 from functools import partial
@@ -10,6 +14,42 @@ from astropy.time import Time, TimeDelta
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
+
+
+@dataclass
+class TopicField:
+    """Dataclass to hold schema information.  It also adds an `astropy.units.Unit`
+    if one can be coerced from the ``units`` field passed to the constructor.
+
+    Parameters
+    ==========
+    name : `str`
+        Name of the field
+    type : `str`
+        Type of the data in th efield: e.g. int, float
+    description : `str` (optional)
+        Description of the field.  Defaults to `None`
+    units : `str` (optional)
+        String specifying the  units for this field.  Defaults to `None`
+    aunits : `u.Unit`
+        This is derived from the value in ``units`` if possible
+    """
+    name: str  # Name of the field
+    type: str  # Type of the data in the field: e.g. int, float
+    description: str = None  # Description of the field if one is provided
+    units: str = None  # String specifying the units for this field
+    aunits: u.Unit = field(init=False)  # The `astropy.units.Unit` inferred from ``units``
+
+    def __post_init__(self):
+        unit_str = self.units
+        try:
+            if unit_str == 'unitless':  # Special case not having units
+                self.aunits = u.dimensionless_unscaled
+            else:
+                self.aunits = u.Unit(unit_str)
+        except (ValueError, TypeError) as e:
+            logging.warn(f'Could not construct unist: {e.message}')
+            self.aunits = None
 
 
 class EfdClient:
@@ -49,7 +89,8 @@ class EfdClient:
         self.db_name = db_name
         self.internal_scale = internal_scale
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, user, password = self.auth.get_auth(efd_name)
+        host, schema_registry, user, password = self.auth.get_auth(efd_name)
+        self.schema_registry = schema_registry
         if client is None:
             health_url = f'https://{host}/health'
             response = requests.get(health_url)
@@ -316,9 +357,9 @@ class EfdClient:
         ret = {}
         n = None
         for bfield in base_fields:
-            for field in fields:
-                if field.startswith(bfield) and field[len(bfield):].isdigit():  # Check prefix is complete
-                    ret.setdefault(bfield, []).append(field)
+            for f in fields:
+                if f.startswith(bfield) and f[len(bfield):].isdigit():  # Check prefix is complete
+                    ret.setdefault(bfield, []).append(f)
             if n is None:
                 n = len(ret[bfield])
             if n != len(ret[bfield]):
@@ -377,9 +418,67 @@ class EfdClient:
         result = await self.select_time_series(topic_name, field_list+[ref_timestamp_col, ],
                                                start, end, is_window=is_window, index=index)
         vals = {}
-        for field in base_fields:
-            df = merge_packed_time_series(result, field, ref_timestamp_col=ref_timestamp_col,
+        for f in base_fields:
+            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
                                           internal_time_scale=self.internal_scale)
-            vals[field] = df[field]
+            vals[f] = df[f]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
+
+    async def get_schema_topics(self):
+        """Return a list of topics in the SchemaRegistry
+
+        Returns
+        -------
+        result : `list` of `str`
+            A `list` of the names of all SAL topics in the registry
+        """
+        async with aiohttp.ClientSession() as http_session:
+            registry_api = RegistryApi(
+                session=http_session, url=self.schema_registry
+            )
+            subjects = await registry_api.get('subjects')
+            ret = []
+            for s in subjects:
+                if not s.startswith('lsst.sal'):  # Only pass on sal topics
+                    continue
+                ret.append(s[:-6])  # strip off the -value part so these are useful as is
+            return ret
+
+    async def get_schema_dict(self, topic):
+        """Givent a topic, get a list of dictionaries describing the fields
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to query.  A full list of valid topic names
+            can be obtained using ``get_schema_topics``.
+
+        Returns
+        -------
+        result : `list` of `dict`
+            A `list` of dictionaries holding the schema information for this topic
+        """
+        async with aiohttp.ClientSession() as http_session:
+            registry_api = RegistryApi(
+                session=http_session, url=self.schema_registry
+            )
+            schema = await registry_api.get_schema_by_subject(f'{topic}-value')
+            return schema['schema']['__named_schemas'][topic]['fields']
+
+    async def get_schema_fields(self, topic):
+        """Givent a topic, get a list of `TopicField` objects describing the fields
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to query.  A full list of valid topic names
+            can be obtained using ``get_schema_topics``.
+
+        Returns
+        -------
+        result : `list` of `TopicField`
+            A `list` of `TopicField` objects holding the schema information for this topic
+        """
+        field_list = await self.get_schema_dict(topic)
+        return {el['name']: TopicField(**el) for el in field_list}
