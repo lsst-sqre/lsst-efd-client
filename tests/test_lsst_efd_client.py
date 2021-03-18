@@ -74,12 +74,12 @@ def test_auth_host(auth_creds):
 
 @pytest.mark.vcr
 def test_auth_user(auth_creds):
-    assert auth_creds[1] == 'foo'
+    assert auth_creds[2] == 'foo'
 
 
 @pytest.mark.vcr
 def test_auth_password(auth_creds):
-    assert auth_creds[2] == 'bar'
+    assert auth_creds[3] == 'bar'
 
 
 @pytest.mark.vcr
