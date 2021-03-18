@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Mon, 15 Feb 2021 18:10:42 GMT
+      - Thu, 18 Mar 2021 19:03:37 GMT
       Request-Id:
-      - 1da35f2f-6fb9-11eb-81f5-0242ac110002
+      - a553e34d-881c-11eb-802a-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 1da35f2f-6fb9-11eb-81f5-0242ac110002
+      - a553e34d-881c-11eb-802a-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Mon, 15 Feb 2021 18:10:42 GMT
+      - Thu, 18 Mar 2021 19:03:38 GMT
       Request-Id:
-      - 1da9bff9-6fb9-11eb-81f6-0242ac110002
+      - a55a8d21-881c-11eb-802b-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 1da9bff9-6fb9-11eb-81f6-0242ac110002
+      - a55a8d21-881c-11eb-802b-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3072,7 +3072,7 @@ interactions:
     uri: https://roundtable.lsst.codes/segwarides/
   response:
     body:
-      string: '{"_metadata": {"name": "segwarides", "version": "0.4.1", "description":
+      string: '{"_metadata": {"name": "segwarides", "version": "0.4.2", "description":
         "A simple app to serve credentials to other services.", "repository_url":
         "https://github.com/lsst-sqre/segwarides", "documentation_url": "https://github.com/lsst-sqre/segwarides"}}'
     headers:
@@ -3083,7 +3083,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 15 Feb 2021 18:10:42 GMT
+      - Thu, 18 Mar 2021 19:03:38 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3104,16 +3104,17 @@ interactions:
     uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
   response:
     body:
-      string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar"}'
+      string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
+        "https://schema-registry-foo.bar.baz"}'
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '65'
+      - '123'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 15 Feb 2021 18:10:42 GMT
+      - Thu, 18 Mar 2021 19:03:38 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3140,9 +3141,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Mon, 15 Feb 2021 18:10:42 GMT
+      - Thu, 18 Mar 2021 19:03:38 GMT
       Request-Id:
-      - 1dfe1ec2-6fb9-11eb-81f7-0242ac110002
+      - a5ae8405-881c-11eb-802c-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3150,7 +3151,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 1dfe1ec2-6fb9-11eb-81f7-0242ac110002
+      - a5ae8405-881c-11eb-802c-0242ac110002
     status:
       code: 200
       message: OK
@@ -3175,9 +3176,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Mon, 15 Feb 2021 18:10:42 GMT
+      - Thu, 18 Mar 2021 19:03:38 GMT
       Request-Id:
-      - 1e0141c6-6fb9-11eb-81f8-0242ac110002
+      - a5b12b90-881c-11eb-802d-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3185,7 +3186,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 1e0141c6-6fb9-11eb-81f8-0242ac110002
+      - a5b12b90-881c-11eb-802d-0242ac110002
     status:
       code: 200
       message: OK
