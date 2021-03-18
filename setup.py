@@ -29,7 +29,9 @@ setup_requirements = [
                       'twine==1.14.0',
                       'pytest-runner', ]
 
-test_requirements = ['pytest>=3', 'pytest-asyncio', 'pytest-vcr']
+test_requirements = ['pytest>=3',
+                     'pytest-asyncio',
+                     'pytest-vcr',]
 
 extra_requirements = {
     'dev': [

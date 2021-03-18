@@ -5,7 +5,6 @@ import aiohttp
 import aioinflux
 from astropy.time import Time, TimeDelta
 import astropy.units as u
-from dataclasses import dataclass, field
 from functools import partial
 from kafkit.registry.aiohttp import RegistryApi
 import logging
@@ -14,42 +13,6 @@ import requests
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
-
-
-@dataclass
-class TopicField:
-    """Dataclass to hold schema information.  It also adds an `astropy.units.Unit`
-    if one can be coerced from the ``units`` field passed to the constructor.
-
-    Parameters
-    ==========
-    name : `str`
-        Name of the field
-    type : `str`
-        Type of the data in th efield: e.g. int, float
-    description : `str` (optional)
-        Description of the field.  Defaults to `None`
-    units : `str` (optional)
-        String specifying the  units for this field.  Defaults to `None`
-    aunits : `u.Unit`
-        This is derived from the value in ``units`` if possible
-    """
-    name: str  # Name of the field
-    type: str  # Type of the data in the field: e.g. int, float
-    description: str = None  # Description of the field if one is provided
-    units: str = None  # String specifying the units for this field
-    aunits: u.Unit = field(init=False)  # The `astropy.units.Unit` inferred from ``units``
-
-    def __post_init__(self):
-        unit_str = self.units
-        try:
-            if unit_str == 'unitless':  # Special case not having units
-                self.aunits = u.dimensionless_unscaled
-            else:
-                self.aunits = u.Unit(unit_str)
-        except (ValueError, TypeError) as e:
-            logging.warn(f'Could not construct unist: {e.message}')
-            self.aunits = None
 
 
 class EfdClient:
@@ -425,27 +388,7 @@ class EfdClient:
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
 
-    async def get_schema_topics(self):
-        """Return a list of topics in the SchemaRegistry
-
-        Returns
-        -------
-        result : `list` of `str`
-            A `list` of the names of all SAL topics in the registry
-        """
-        async with aiohttp.ClientSession() as http_session:
-            registry_api = RegistryApi(
-                session=http_session, url=self.schema_registry
-            )
-            subjects = await registry_api.get('subjects')
-            ret = []
-            for s in subjects:
-                if not s.startswith('lsst.sal'):  # Only pass on sal topics
-                    continue
-                ret.append(s[:-6])  # strip off the -value part so these are useful as is
-            return ret
-
-    async def get_schema_dict(self, topic):
+    async def get_schema(self, topic):
         """Givent a topic, get a list of dictionaries describing the fields
 
         Parameters
@@ -456,29 +399,31 @@ class EfdClient:
 
         Returns
         -------
-        result : `list` of `dict`
-            A `list` of dictionaries holding the schema information for this topic
+        result : `Pandas.DataFrame`
+            A dataframe with the schema information for the topic.  One row per field.
         """
         async with aiohttp.ClientSession() as http_session:
             registry_api = RegistryApi(
                 session=http_session, url=self.schema_registry
             )
             schema = await registry_api.get_schema_by_subject(f'{topic}-value')
-            return schema['schema']['__named_schemas'][topic]['fields']
+            return self._parse_schema(topic, schema)
 
-    async def get_schema_fields(self, topic):
-        """Givent a topic, get a list of `TopicField` objects describing the fields
-
-        Parameters
-        ----------
-        topic : `str`
-            The name of the topic to query.  A full list of valid topic names
-            can be obtained using ``get_schema_topics``.
-
-        Returns
-        -------
-        result : `list` of `TopicField`
-            A `list` of `TopicField` objects holding the schema information for this topic
-        """
-        field_list = await self.get_schema_dict(topic)
-        return {el['name']: TopicField(**el) for el in field_list}
+    @staticmethod
+    def _parse_schema(topic, schema):
+        # A helper function so we can test our parsing
+        fields = schema['schema']['__named_schemas'][topic]['fields']
+        vals = {'name': [], 'description': [], 'units': [], 'aunits': []}
+        for f in fields:
+            vals['name'].append(f['name'])
+            vals['description'].append(f['description'])
+            vals['units'].append(f['units'])
+            try:
+                if vals['units'][-1] == 'unitless':  # Special case not having units
+                    vals['aunits'].append(u.dimensionless_unscaled)
+                else:
+                    vals['aunits'].append(u.Unit(vals['units'][-1]))
+            except (ValueError, TypeError) as e:
+                logging.warning(f'Could not construct unist: {e.args[0]}')
+                vals['aunits'].append(None)
+        return pd.DataFrame(vals)
