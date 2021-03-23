@@ -143,18 +143,12 @@ async def test_parse_schema(efd_client):
              {
                 "name": "schema1",
                 "type": "record",
-                "__named_schemas":
-                    {
-                    "schema1":
-                        {
-                        "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "second"},
-                                   {"name": "b", "type": "double", "description": "Description 2", "units": "meter"},
-                                   {"name": "c", "type": "float", "description": "Description 3", "units": "gram"},
-                                   {"name": "d", "type": "string", "description": "Description 4", "units": "torr"}
-                                   ],
-                        }
-                    }
-                }
+                "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "second"},
+                           {"name": "b", "type": "double", "description": "Description 2", "units": "meter"},
+                           {"name": "c", "type": "float", "description": "Description 3", "units": "gram"},
+                           {"name": "d", "type": "string", "description": "Description 4", "units": "torr"}
+                          ],
+              }
         ),
         "subject": "schema1",
         "version": 1,
@@ -165,10 +159,6 @@ async def test_parse_schema(efd_client):
     client = MockRegistryApi(body=body)
 
     schema = await client.get_schema_by_subject("schema1")
-    # The above makes several extra levels of nesting, but the fields values are not copied to all of them
-    # Set the level the parser expects
-    fields = schema['schema']['__named_schemas']['schema1']['__named_schemas']['schema1']['fields']
-    schema['schema']['__named_schemas']['schema1']['fields'] = fields
     result = efd_client._parse_schema("schema1", schema)
     assert isinstance(result, pd.DataFrame)
     for i, l in enumerate('abcd'):

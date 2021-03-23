@@ -412,7 +412,7 @@ class EfdClient:
     @staticmethod
     def _parse_schema(topic, schema):
         # A helper function so we can test our parsing
-        fields = schema['schema']['__named_schemas'][topic]['fields']
+        fields = schema['schema']['fields']
         vals = {'name': [], 'description': [], 'units': [], 'aunits': []}
         for f in fields:
             vals['name'].append(f['name'])
