@@ -40,3 +40,9 @@ History
 
 * Fix a regression that causes an exception when the name of one column is the same as the start of the name of another column
 * Add a test for the regression
+
+0.7.0 (2021-03-24)
+------------------
+
+* Add the get_schema method to fetch metadata about topic fields
+* Add a test for the schema parser

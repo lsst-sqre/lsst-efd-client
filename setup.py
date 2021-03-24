@@ -16,7 +16,8 @@ requirements = [
                 'pandas',
                 'astropy',
                 'pyyaml',
-                'tables', ]
+                'tables', 
+                'kafkit', ]
 
 setup_requirements = [
                       'pip==19.2.3',
@@ -28,7 +29,9 @@ setup_requirements = [
                       'twine==1.14.0',
                       'pytest-runner', ]
 
-test_requirements = ['pytest>=3', 'pytest-asyncio', 'pytest-vcr']
+test_requirements = ['pytest>=3',
+                     'pytest-asyncio',
+                     'pytest-vcr',]
 
 extra_requirements = {
     'dev': [

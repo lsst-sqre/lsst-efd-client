@@ -28,6 +28,7 @@ Features
   * `select_time_series`: Return a DataFrame containing results of a time range query
   * `select_packed_time_series`: Return a DataFrame with high cadence telemetry expanded into a single DataFrame.
   * `select_top_n`: Return a DataFrame with the results of just the most recent rows.
+  * `get_schema`: Get metadata for the fields in a particular topic.
 
 * There are also some utilities for dealing with results of queries
 

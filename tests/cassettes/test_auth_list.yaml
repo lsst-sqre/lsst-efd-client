@@ -14,7 +14,7 @@ interactions:
     uri: https://roundtable.lsst.codes/segwarides/
   response:
     body:
-      string: '{"_metadata": {"name": "segwarides", "version": "0.4.1", "description":
+      string: '{"_metadata": {"name": "segwarides", "version": "0.4.2", "description":
         "A simple app to serve credentials to other services.", "repository_url":
         "https://github.com/lsst-sqre/segwarides", "documentation_url": "https://github.com/lsst-sqre/segwarides"}}'
     headers:
@@ -25,7 +25,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 15 Feb 2021 18:10:37 GMT
+      - Thu, 18 Mar 2021 23:29:42 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -46,16 +46,17 @@ interactions:
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ncsa_teststand_efd", "ldf_int_efd", "base_efd", "test_efd", "summit_efd"]'
+      string: '["summit_efd", "ncsa_teststand_efd", "ldf_stable_efd", "ldf_int_efd",
+        "base_efd", "test_efd"]'
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '75'
+      - '93'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 15 Feb 2021 18:10:37 GMT
+      - Thu, 18 Mar 2021 23:29:42 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:

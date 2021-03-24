@@ -1,12 +1,15 @@
 """EFD client class
 """
 
+import aiohttp
 import aioinflux
-import requests
+from astropy.time import Time, TimeDelta
+import astropy.units as u
 from functools import partial
+from kafkit.registry.aiohttp import RegistryApi
 import logging
 import pandas as pd
-from astropy.time import Time, TimeDelta
+import requests
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
@@ -49,7 +52,8 @@ class EfdClient:
         self.db_name = db_name
         self.internal_scale = internal_scale
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, user, password = self.auth.get_auth(efd_name)
+        host, schema_registry, user, password = self.auth.get_auth(efd_name)
+        self.schema_registry = schema_registry
         if client is None:
             health_url = f'https://{host}/health'
             response = requests.get(health_url)
@@ -316,9 +320,9 @@ class EfdClient:
         ret = {}
         n = None
         for bfield in base_fields:
-            for field in fields:
-                if field.startswith(bfield) and field[len(bfield):].isdigit():  # Check prefix is complete
-                    ret.setdefault(bfield, []).append(field)
+            for f in fields:
+                if f.startswith(bfield) and f[len(bfield):].isdigit():  # Check prefix is complete
+                    ret.setdefault(bfield, []).append(f)
             if n is None:
                 n = len(ret[bfield])
             if n != len(ret[bfield]):
@@ -377,9 +381,49 @@ class EfdClient:
         result = await self.select_time_series(topic_name, field_list+[ref_timestamp_col, ],
                                                start, end, is_window=is_window, index=index)
         vals = {}
-        for field in base_fields:
-            df = merge_packed_time_series(result, field, ref_timestamp_col=ref_timestamp_col,
+        for f in base_fields:
+            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
                                           internal_time_scale=self.internal_scale)
-            vals[field] = df[field]
+            vals[f] = df[f]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
+
+    async def get_schema(self, topic):
+        """Givent a topic, get a list of dictionaries describing the fields
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to query.  A full list of valid topic names
+            can be obtained using ``get_schema_topics``.
+
+        Returns
+        -------
+        result : `Pandas.DataFrame`
+            A dataframe with the schema information for the topic.  One row per field.
+        """
+        async with aiohttp.ClientSession() as http_session:
+            registry_api = RegistryApi(
+                session=http_session, url=self.schema_registry
+            )
+            schema = await registry_api.get_schema_by_subject(f'{topic}-value')
+            return self._parse_schema(topic, schema)
+
+    @staticmethod
+    def _parse_schema(topic, schema):
+        # A helper function so we can test our parsing
+        fields = schema['schema']['fields']
+        vals = {'name': [], 'description': [], 'units': [], 'aunits': []}
+        for f in fields:
+            vals['name'].append(f['name'])
+            vals['description'].append(f['description'])
+            vals['units'].append(f['units'])
+            try:
+                if vals['units'][-1] == 'unitless':  # Special case not having units
+                    vals['aunits'].append(u.dimensionless_unscaled)
+                else:
+                    vals['aunits'].append(u.Unit(vals['units'][-1]))
+            except (ValueError, TypeError) as e:
+                logging.warning(f'Could not construct unist: {e.args[0]}')
+                vals['aunits'].append(None)
+        return pd.DataFrame(vals)

@@ -47,7 +47,7 @@ class NotebookAuth:
         response = requests.get(urljoin(self.service_endpoint, f"creds/{alias}"))
         if response.status_code == 200:
             data = response.json()
-            return (data['host'], data['username'], data['password'])
+            return (data['host'], data['schema_registry'], data['username'], data['password'])
         elif response.status_code == 404:
             raise ValueError(f"No credentials available for {alias}. "
                              "Try list_auth to get a list of available keys.")

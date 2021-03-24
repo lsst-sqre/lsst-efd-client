@@ -4,8 +4,11 @@
 
 import numpy
 import pandas as pd
+import json
 import pytest
+from kafkit.registry.sansio import MockRegistryApi
 from astropy.time import Time, TimeDelta
+import astropy.units as u
 from aioinflux import InfluxDBClient
 import pathlib
 
@@ -38,6 +41,9 @@ async def efd_client():
         await client.create_database()
         await client.write(df, measurement='lsst.sal.fooSubSys.test')
         efd_client = EfdClient('test_efd', db_name='client_test', client=client)
+        # Monkey patch the client to point to an existing schema registry
+        # Note this is only available if on the NCSA VPN
+        efd_client.schema_registry = 'https://lsst-schema-registry-efd.ncsa.illinois.edu'
         yield efd_client
         await client.drop_database()
 
@@ -73,13 +79,18 @@ def test_auth_host(auth_creds):
 
 
 @pytest.mark.vcr
+def test_auth_registry(auth_creds):
+    assert auth_creds[1] == 'https://schema-registry-foo.bar.baz'
+
+
+@pytest.mark.vcr
 def test_auth_user(auth_creds):
-    assert auth_creds[1] == 'foo'
+    assert auth_creds[2] == 'foo'
 
 
 @pytest.mark.vcr
 def test_auth_password(auth_creds):
-    assert auth_creds[2] == 'bar'
+    assert auth_creds[3] == 'bar'
 
 
 @pytest.mark.vcr
@@ -121,6 +132,44 @@ def test_build_query_delta(efd_client, start_stop, expected_strs):
     qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], tdelta, is_window=True)
     assert qstr == expected_strs[3].strip()
+
+
+@pytest.mark.asyncio
+async def test_parse_schema(efd_client):
+    """Test the EfdClient._parse_schema method."""
+    # Body that we expect the registry API to return given the request.
+    expected_body = {
+        "schema": json.dumps(
+             {
+                "name": "schema1",
+                "type": "record",
+                "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "second"},
+                           {"name": "b", "type": "double", "description": "Description 2", "units": "meter"},
+                           {"name": "c", "type": "float", "description": "Description 3", "units": "gram"},
+                           {"name": "d", "type": "string", "description": "Description 4", "units": "torr"}
+                          ],
+              }
+        ),
+        "subject": "schema1",
+        "version": 1,
+        "id": 2,
+    }
+
+    body = json.dumps(expected_body).encode("utf-8")
+    client = MockRegistryApi(body=body)
+
+    schema = await client.get_schema_by_subject("schema1")
+    result = efd_client._parse_schema("schema1", schema)
+    assert isinstance(result, pd.DataFrame)
+    for i, l in enumerate('abcd'):
+        assert result['name'][i] == l
+    for i in range(4):
+        assert result['description'][i] == f'Description {i+1}'
+    assert 'units' in result.columns
+    assert 'aunits' in result.columns
+    assert 'type' not in result.columns
+    for unit in result['aunits']:
+        assert isinstance(unit, u.UnitBase)
 
 
 @pytest.mark.asyncio
