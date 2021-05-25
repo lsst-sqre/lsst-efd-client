@@ -46,3 +46,9 @@ History
 
 * Add the get_schema method to fetch metadata about topic fields
 * Add a test for the schema parser
+
+0.8.2 (2021-05-25)
+------------------
+
+* Deal gracefully with topics that have no description or units (Thanks Angelo!)
+* Add add a parameter to allow a time threshold when selecting top N (Thanks Michael!)
