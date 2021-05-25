@@ -426,14 +426,20 @@ class EfdClient:
         vals = {'name': [], 'description': [], 'units': [], 'aunits': []}
         for f in fields:
             vals['name'].append(f['name'])
-            vals['description'].append(f['description'])
-            vals['units'].append(f['units'])
-            try:
-                if vals['units'][-1] == 'unitless':  # Special case not having units
-                    vals['aunits'].append(u.dimensionless_unscaled)
-                else:
-                    vals['aunits'].append(u.Unit(vals['units'][-1]))
-            except (ValueError, TypeError) as e:
-                logging.warning(f'Could not construct unist: {e.args[0]}')
+            if 'description' in f:
+                vals['description'].append(f['description'])
+            else:
+                vals['description'].append(None)
+            if 'units' in f:
+                vals['units'].append(f['units'])
+                try:
+                    if vals['units'][-1] == 'unitless':  # Special case not having units
+                        vals['aunits'].append(u.dimensionless_unscaled)
+                    else:
+                        vals['aunits'].append(u.Unit(vals['units'][-1]))
+                except (ValueError, TypeError) as e:
+                    logging.warning(f'Could not construct units: {e.args[0]}')
+            else:
+                vals['units'].append(None)
                 vals['aunits'].append(None)
         return pd.DataFrame(vals)
