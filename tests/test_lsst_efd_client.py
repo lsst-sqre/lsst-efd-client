@@ -205,6 +205,14 @@ async def test_top_n(efd_client, start_stop):
     assert len(df) == 10
     for c in ['foo', 'bar']:
         assert c in df.columns
+    df = await efd_client.select_top_n('lsst.sal.fooSubSys.test', ['foo', 'bar'], 10, time_cut=start_stop[0])
+    assert len(df) == 10
+    for c in ['foo', 'bar']:
+        assert c in df.columns
+    assert df['foo'].values[0] == 144.11835565266966
+    assert df['bar'].values[0] == 631.1982694645203
+    assert df['foo'].values[-1] == 180.95267940509046
+    assert df['bar'].values[-1] == 314.7001662962593
 
 
 @pytest.mark.asyncio

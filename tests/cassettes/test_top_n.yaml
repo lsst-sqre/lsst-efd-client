@@ -3161,6 +3161,42 @@ interactions:
       chunked: 'false'
       db: client_test
       epoch: ns
+      q: SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE time < '2020-01-28T23:07:19.000Z' GROUP
+        BY * ORDER BY DESC LIMIT 10
+    headers: {}
+    method: POST
+    uri: http://localhost:8086/query
+  response:
+    body:
+      string: '{"results":[{"statement_id":0,"series":[{"name":"lsst.sal.fooSubSys.test","columns":["time","foo","bar"],"values":[[1580252838130000115,144.11835565266966,631.1982694645203],[1580252837130000115,33.245423849791074,220.9622230771325],[1580252836130000115,580.0016886529814,688.4147928728561],[1580252835130000115,664.65989880869,138.3647220688827],[1580252834130000115,395.3117927859014,466.72018565092054],[1580252833130000115,495.06351132090305,424.49215861810626],[1580252832130000115,661.9357383050288,728.0624183753517],[1580252831130000115,122.36023059415899,592.7107195853046],[1580252830130000115,417.49842477552716,212.65916794847783],[1580252829130000115,180.95267940509046,314.7001662962593]]}]}]}
+
+        '
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 18 Mar 2021 23:29:57 GMT
+      Request-Id:
+      - da1fe349-8841-11eb-82be-0242ac110002
+      Transfer-Encoding:
+      - chunked
+      X-Influxdb-Build:
+      - OSS
+      X-Influxdb-Version:
+      - 1.7.6
+      X-Request-Id:
+      - da1fe349-8841-11eb-82be-0242ac110002
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:8086/query
+- request:
+    body:
+      chunked: 'false'
+      db: client_test
+      epoch: ns
       q: DROP DATABASE "client_test"
     headers: {}
     method: POST
