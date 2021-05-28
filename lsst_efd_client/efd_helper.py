@@ -433,7 +433,7 @@ class EfdClient:
             if 'units' in f:
                 vals['units'].append(f['units'])
                 try:
-                    if vals['units'][-1] == 'unitless':  # Special case not having units
+                    if vals['units'][-1] == 'unitless' or vals['units'][-1] == 'dimensionless':  # Special case not having units
                         vals['aunits'].append(u.dimensionless_unscaled)
                     else:
                         vals['aunits'].append(u.Unit(vals['units'][-1]))
