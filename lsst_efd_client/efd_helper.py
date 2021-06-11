@@ -423,7 +423,7 @@ class EfdClient:
     def _parse_schema(topic, schema):
         # A helper function so we can test our parsing
         fields = schema['schema']['fields']
-        vals = {'name': [], 'description': [], 'units': [], 'aunits': []}
+        vals = {'name': [], 'description': [], 'units': [], 'aunits': [], 'is_array': []}
         for f in fields:
             vals['name'].append(f['name'])
             if 'description' in f:
@@ -433,7 +433,7 @@ class EfdClient:
             if 'units' in f:
                 vals['units'].append(f['units'])
                 try:
-                    if vals['units'][-1] == 'unitless':  # Special case not having units
+                    if vals['units'][-1] == 'unitless' or vals['units'][-1] == 'dimensionless':  # Special case not having units
                         vals['aunits'].append(u.dimensionless_unscaled)
                     else:
                         vals['aunits'].append(u.Unit(vals['units'][-1]))
@@ -442,4 +442,8 @@ class EfdClient:
             else:
                 vals['units'].append(None)
                 vals['aunits'].append(None)
+            if isinstance(f['type'], dict) and f['type']['type'] == 'array':
+                vals['is_array'].append(True)
+            else:
+                vals['is_array'].append(False)
         return pd.DataFrame(vals)
