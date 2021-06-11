@@ -52,3 +52,9 @@ History
 
 * Deal gracefully with topics that have no description or units (Thanks Angelo!)
 * Add add a parameter to allow a time threshold when selecting top N (Thanks Michael!)
+
+0.8.3 (2021-06-11)
+------------------
+
+* Add column specifying if a field in the schema is array-like.
+* Check for both conventions indicating unitless columns when creating astropy units.
