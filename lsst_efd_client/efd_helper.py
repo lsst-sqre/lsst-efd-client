@@ -29,9 +29,9 @@ class EfdClient:
     internal_scale : `str`, optional
         Time scale to use when converting times to internal formats
         ('tai' by default).
-    path_to_creds : `str`, optional
-        Absolute path to use when reading credentials from disk
-        ('~/.lsst/notebook_auth.yaml' by default).
+    creds_service : `str`, optional
+        URL to the service to retrieve credentials
+        (``https://roundtable.lsst.codes/segwarides/`` by default).
     client : `object`, optional
         An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
         The intent is to be able to substitute a mocked client for testing.
