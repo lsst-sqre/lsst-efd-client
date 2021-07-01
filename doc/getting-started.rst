@@ -21,5 +21,7 @@ To install or upgrade the LSST EFD Client, use :command:`pip`:
 Next steps
 ==========
 
-- See the example EFD notebooks in the `lsst-sqre/notebook-demo repository <https://github.com/lsst-sqre/notebook-demo/tree/master/experiments/efd>`_.
+- See the example EFD notebooks in the `lsst-sqre/notebook-demo repository`_.
 - Refer to the :ref:`py-api`.
+
+.. _lsst-sqre/notebook-demo repository: https://github.com/lsst-sqre/notebook-demo/tree/master/efd_examples
