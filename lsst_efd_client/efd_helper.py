@@ -84,6 +84,17 @@ class EfdClient:
 
     @classmethod
     def list_efd_names(cls, creds_service='https://roundtable.lsst.codes/segwarides/'):
+        """List all valid names for EFD deployments available.
+
+        Parameters
+        ----------
+        creds_service : `str`, optional
+
+        Returns
+        -------
+        results : `list`
+            A `list` of `str` each specifying the name of a valid deployment.
+        """
         return NotebookAuth(service_endpoint=creds_service).list_auth()
 
     def from_name(self, efd_name, *args, **kwargs):
