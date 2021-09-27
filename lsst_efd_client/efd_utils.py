@@ -73,7 +73,7 @@ def resample(df1, df2, interp_type='time'):
         That is the length of the resulting `pandas.DataFrame` is the
         sum of the lengths of the inputs.
     """
-    df = df1.append(df2, sort=False)  # Sort in this context does not sort the data
+    df = pandas.concat([df1, df2], axis=1)  # Sort in this context does not sort the data
     df = df.sort_index()
     return df.interpolate(type=interp_type)
 
