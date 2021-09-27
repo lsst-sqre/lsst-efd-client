@@ -6,7 +6,7 @@ import pandas
 
 
 def merge_packed_time_series(packed_dataframe, base_field, stride=1,
-                             ref_timestamp_col="cRIO_timestamp", internal_time_scale="tai"):
+                             ref_timestamp_col="cRIO_timestamp"):
     """Select fields that are time samples and unpack them into a dataframe.
     Parameters
     ----------
@@ -22,9 +22,6 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
     ref_timestamp_col : `str`, optional
         Name of the field name to use to assign timestamps to unpacked
         vector fields (default is 'cRIO_timestamp').
-    internal_time_scale : `str`, optional
-        Time scale to use when converting times to internal formats
-        ('tai' by default). Equivalent to EfdClient.internal_scale
     Returns
     -------
     result : `pandas.DataFrame`
@@ -50,7 +47,7 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
         output[i0::n_used] = packed_dataframe[f"{base_field}{i}"]
         times[i0::n_used] = packed_dataframe[ref_timestamp_col] + i*dt
 
-    timestamps = Time(times, format='unix', scale=internal_time_scale).datetime64
+    timestamps = Time(times, format='unix', scale='utc').datetime64
     return pandas.DataFrame({base_field: output, "times": times}, index=timestamps)
 
 
