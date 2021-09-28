@@ -29,9 +29,9 @@ class EfdClient:
     internal_scale : `str`, optional
         Time scale to use when converting times to internal formats
         ('tai' by default).
-    path_to_creds : `str`, optional
-        Absolute path to use when reading credentials from disk
-        ('~/.lsst/notebook_auth.yaml' by default).
+    creds_service : `str`, optional
+        URL to the service to retrieve credentials
+        (``https://roundtable.lsst.codes/segwarides/`` by default).
     client : `object`, optional
         An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
         The intent is to be able to substitute a mocked client for testing.
@@ -84,6 +84,17 @@ class EfdClient:
 
     @classmethod
     def list_efd_names(cls, creds_service='https://roundtable.lsst.codes/segwarides/'):
+        """List all valid names for EFD deployments available.
+
+        Parameters
+        ----------
+        creds_service : `str`, optional
+
+        Returns
+        -------
+        results : `list`
+            A `list` of `str` each specifying the name of a valid deployment.
+        """
         return NotebookAuth(service_endpoint=creds_service).list_auth()
 
     def from_name(self, efd_name, *args, **kwargs):

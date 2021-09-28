@@ -61,6 +61,9 @@ def expected_strs():
 def test_df():
     return pd.read_hdf(PATH/'efd_test.hdf')
 
+@pytest.fixture
+def test_query_res():
+    return pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
 
 @pytest.fixture
 def start_stop():
@@ -217,8 +220,8 @@ async def test_top_n(efd_client, start_stop):
 
 @pytest.mark.asyncio
 @pytest.mark.vcr
-async def test_packed_time_series(efd_client, start_stop):
-    df_exp = pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
+async def test_packed_time_series(efd_client, start_stop, test_query_res):
+    df_exp = test_query_res
     df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg', 'hamegg'],
                                                     start_stop[0], start_stop[1])
     assert numpy.all((df.index[1:] - df.index[:-1]).total_seconds() > 0)
@@ -227,11 +230,12 @@ async def test_packed_time_series(efd_client, start_stop):
         assert c in df.columns
 
 
-def test_resample(test_df):
-    df_copy = test_df.copy()
-    df_copy.set_index(df_copy['tstamp'] + pd.Timedelta(0.5, unit='s'), inplace=True)
-    df_out = resample(test_df, df_copy)
-    assert len(df_out) == 2*len(test_df)
+def test_resample(test_query_res):
+    df = test_query_res
+    df_copy = df.copy()
+    df_copy.set_index(df_copy.index + pd.Timedelta(0.05, unit='s'), inplace=True)
+    df_out = resample(df, df_copy)
+    assert len(df_out) == 2*len(df)
 
 
 def test_rendezvous(test_df):
