@@ -58,3 +58,10 @@ History
 
 * Add column specifying if a field in the schema is array-like.
 * Check for both conventions indicating unitless columns when creating astropy units.
+
+0.9.0 (2021-10-05)
+------------------
+
+* This changes the convention to using UTC as the internal representation.
+  This mirrors a change in the influxDB to store index timestamps as UTC.
+  There is a switch to convert the index from TAI to UTC, but the default is to assume UTC everywhere.
