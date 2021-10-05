@@ -26,15 +26,17 @@ class EfdClient:
         Name of the database within influxDB to query ('efd' by default).
     port : `str`, optional
         Port to use when querying the database ('443' by default).
-    internal_scale : `str`, optional
-        Time scale to use when converting times to internal formats
-        ('tai' by default).
     creds_service : `str`, optional
         URL to the service to retrieve credentials
         (``https://roundtable.lsst.codes/segwarides/`` by default).
     client : `object`, optional
         An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
         The intent is to be able to substitute a mocked client for testing.
+    convert_influx_index : `bool`, optional
+        Convert influxDB time index from TAI to UTC?  This is for using legacy
+        instances that may still have timestamps stored internally as TAI.
+        Modern instances all store index timestamps as UTC natively.
+        Default is `False`, don't translate from TAI to UTC.
     """
 
     influx_client = None
@@ -47,13 +49,13 @@ class EfdClient:
     deployment = ''
 
     def __init__(self, efd_name, db_name='efd', port='443',
-                 internal_scale='tai', creds_service='https://roundtable.lsst.codes/segwarides/',
-                 client=None):
+                 creds_service='https://roundtable.lsst.codes/segwarides/',
+                 client=None, convert_influx_index=False):
         self.db_name = db_name
-        self.internal_scale = internal_scale
         self.auth = NotebookAuth(service_endpoint=creds_service)
         host, schema_registry, user, password = self.auth.get_auth(efd_name)
         self.schema_registry = schema_registry
+        self.convert_influx_index = convert_influx_index
         if client is None:
             health_url = f'https://{host}/health'
             response = requests.get(health_url)
@@ -133,6 +135,12 @@ class EfdClient:
         """
         self.query_history.append(query)
         result = await self.influx_client.query(query)
+        if not isinstance(result, pd.DataFrame) and not result:
+            # aioinflux returns an empty dict for an empty query
+            result = pd.DataFrame()
+        elif self.convert_influx_index:
+            times = Time(result.index, format='datetime', scale='tai')
+            result = result.set_index(times.utc.datetime) 
         return result
 
     async def get_topics(self):
@@ -193,9 +201,8 @@ class EfdClient:
         if not isinstance(start, Time):
             raise TypeError('The first time argument must be a time stamp')
 
-        if not start.scale == self.internal_scale:
-            logging.warn(f'Timestamps must be in {self.internal_scale.upper()}.  Converting...')
-            start = getattr(start, self.internal_scale)
+        if not start.scale == 'utc':
+            raise ValueError(f'Timestamps must be in UTC.')
 
         if isinstance(end, TimeDelta):
             if is_window:
@@ -205,7 +212,8 @@ class EfdClient:
                 start_str = start.isot
                 end_str = (start + end).isot
         elif isinstance(end, Time):
-            end = getattr(end, self.internal_scale)
+            if not end.scale == 'utc':
+                raise ValueError(f'Timestamps must be in UTC.')
             start_str = start.isot
             end_str = end.isot
         else:
@@ -257,9 +265,6 @@ class EfdClient:
         query = self.build_time_range_query(topic_name, fields, start, end, is_window, index)
         # Do query
         ret = await self._do_query(query)
-        if not isinstance(ret, pd.DataFrame) and not ret:
-            # aioinflux returns an empty dict for an empty query
-            ret = pd.DataFrame()
         return ret
 
     async def select_top_n(self, topic_name, fields, num, time_cut=None, index=None):
@@ -314,9 +319,6 @@ class EfdClient:
 
         # Do query
         ret = await self._do_query(query)
-        if not isinstance(ret, pd.DataFrame) and not ret:
-            # aioinflux returns an empty dict for an empty query
-            ret = pd.DataFrame()
         return ret
 
     def _make_fields(self, fields, base_fields):
@@ -403,8 +405,7 @@ class EfdClient:
                                                start, end, is_window=is_window, index=index)
         vals = {}
         for f in base_fields:
-            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
-                                          internal_time_scale=self.internal_scale)
+            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col)
             vals[f] = df[f]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)

@@ -67,7 +67,7 @@ def test_query_res():
 
 @pytest.fixture
 def start_stop():
-    time = Time('2020-01-28T23:07:19.00', format='isot', scale='tai')
+    time = Time('2020-01-28T23:07:19.00', format='isot', scale='utc')
     return (time, time + TimeDelta(600, format='sec'))
 
 
