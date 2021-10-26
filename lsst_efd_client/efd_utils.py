@@ -6,7 +6,8 @@ import pandas
 
 
 def merge_packed_time_series(packed_dataframe, base_field, stride=1,
-                             ref_timestamp_col="cRIO_timestamp"):
+                             ref_timestamp_col="cRIO_timestamp", fmt='unix_tai',
+                             scale='tai'):
     """Select fields that are time samples and unpack them into a dataframe.
     Parameters
     ----------
@@ -22,6 +23,12 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
     ref_timestamp_col : `str`, optional
         Name of the field name to use to assign timestamps to unpacked
         vector fields (default is 'cRIO_timestamp').
+    fmt : `str`, optional
+        Format to give to the `astropy.Time` constructor.  Defaults to
+        'unix_tai' since most internal timestamp columns are in TAI.
+    scale : `str`, optional
+        Time scale to give to the `astropy.Time` constructor.  Defaults to
+        'tai'.
     Returns
     -------
     result : `pandas.DataFrame`
@@ -47,8 +54,8 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
         output[i0::n_used] = packed_dataframe[f"{base_field}{i}"]
         times[i0::n_used] = packed_dataframe[ref_timestamp_col] + i*dt
 
-    timestamps = Time(times, format='unix', scale='utc').datetime64
-    return pandas.DataFrame({base_field: output, "times": times}, index=timestamps)
+    timestamps = Time(times, format=fmt, scale=scale)
+    return pandas.DataFrame({base_field: output, "times": times}, index=timestamps.utc.datetime64)
 
 
 def resample(df1, df2, interp_type='time'):

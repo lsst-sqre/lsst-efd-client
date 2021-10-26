@@ -367,7 +367,8 @@ class EfdClient:
         return ret, n
 
     async def select_packed_time_series(self, topic_name, base_fields, start, end,
-                                        is_window=False, index=None, ref_timestamp_col="cRIO_timestamp"):
+                                        is_window=False, index=None, ref_timestamp_col="cRIO_timestamp",
+                                        ref_timestamp_fmt='unix_tai', ref_timestamp_scale='tai'):
         """Select fields that are time samples and unpack them into a dataframe.
 
         Parameters
@@ -393,6 +394,12 @@ class EfdClient:
         ref_timestamp_col : `str`, optional
             Name of the field name to use to assign timestamps to unpacked
             vector fields (default is 'cRIO_timestamp').
+        ref_timestamp_fmt : `str`, optional
+            Format to use to translating ``ref_timestamp_col`` values
+            (default is 'unix_tai').
+        ref_timestamp_scale : `str`, optional
+            Time scale to use in translating ``ref_timestamp_col`` values
+            (default is 'tai').
 
         Returns
         -------
@@ -413,7 +420,8 @@ class EfdClient:
                                                start, end, is_window=is_window, index=index)
         vals = {}
         for f in base_fields:
-            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col)
+            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
+                                          fmt=ref_timestamp_fmt, scale=ref_timestamp_scale)
             vals[f] = df[f]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
