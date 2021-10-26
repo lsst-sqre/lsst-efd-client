@@ -32,11 +32,6 @@ class EfdClient:
     client : `object`, optional
         An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
         The intent is to be able to substitute a mocked client for testing.
-    convert_influx_index : `bool`, optional
-        Convert influxDB time index from TAI to UTC?  This is for using legacy
-        instances that may still have timestamps stored internally as TAI.
-        Modern instances all store index timestamps as UTC natively.
-        Default is `False`, don't translate from TAI to UTC.
     """
 
     influx_client = None
@@ -50,12 +45,11 @@ class EfdClient:
 
     def __init__(self, efd_name, db_name='efd', port='443',
                  creds_service='https://roundtable.lsst.codes/segwarides/',
-                 client=None, convert_influx_index=False):
+                 client=None):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
         host, schema_registry, user, password = self.auth.get_auth(efd_name)
         self.schema_registry = schema_registry
-        self.convert_influx_index = convert_influx_index
         if client is None:
             health_url = f'https://{host}/health'
             response = requests.get(health_url)
@@ -120,25 +114,29 @@ class EfdClient:
             raise NotImplementedError(f'There is no EFD client class implemented for {efd_name}.')
         return self.subclasses[efd_name](efd_name, *args, **kwargs)
 
-    async def _do_query(self, query):
+    async def _do_query(self, query, convert_influx_index=False):
         """Query the influxDB and return results
 
         Parameters
         ----------
         query : `str`
             Query string to execute.
+        convert_influx_index : `bool`
+            Legacy flag to convert time index from TAI to UTC
 
         Returns
         -------
         results : `pandas.DataFrame`
             Results of the query in a `pandas.DataFrame`.
+            Can't be used with none time-like indexes.
+            Defaults to False.
         """
         self.query_history.append(query)
         result = await self.influx_client.query(query)
         if not isinstance(result, pd.DataFrame) and not result:
             # aioinflux returns an empty dict for an empty query
             result = pd.DataFrame()
-        elif self.convert_influx_index:
+        elif convert_influx_index:
             times = Time(result.index, format='datetime', scale='tai')
             result = result.set_index(times.utc.datetime) 
         return result
@@ -234,7 +232,7 @@ class EfdClient:
         # Build query here
         return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
-    async def select_time_series(self, topic_name, fields, start, end, is_window=False, index=None):
+    async def select_time_series(self, topic_name, fields, start, end, is_window=False, index=None, convert_influx_index=False):
         """Select a time series for a set of topics in a single subsystem
 
         Parameters
@@ -256,6 +254,11 @@ class EfdClient:
         index : `int`, optional
             For indexed topics set this to the index of the topic to query
             (default is `None`).
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC?  This is for using legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
 
         Returns
         -------
@@ -264,10 +267,10 @@ class EfdClient:
         """
         query = self.build_time_range_query(topic_name, fields, start, end, is_window, index)
         # Do query
-        ret = await self._do_query(query)
+        ret = await self._do_query(query, convert_influx_index)
         return ret
 
-    async def select_top_n(self, topic_name, fields, num, time_cut=None, index=None):
+    async def select_top_n(self, topic_name, fields, num, time_cut=None, index=None, convert_influx_index=False):
         """Select the most recent N samples from a set of topics in a single subsystem.
         This method does not guarantee sort direction of the returned rows.
 
@@ -285,6 +288,11 @@ class EfdClient:
         index : `int`, optional
             For indexed topics set this to the index of the topic to query
             (default is `None`)
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC?  This is for using legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
 
         Returns
         -------
@@ -318,7 +326,7 @@ class EfdClient:
         query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}"{pstr} {limit}'
 
         # Do query
-        ret = await self._do_query(query)
+        ret = await self._do_query(query, convert_influx_index)
         return ret
 
     def _make_fields(self, fields, base_fields):
