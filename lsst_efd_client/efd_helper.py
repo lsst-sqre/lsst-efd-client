@@ -435,7 +435,8 @@ class EfdClient:
                                                convert_influx_index=convert_influx_index)
         vals = {}
         for f in base_fields:
-            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col)
+            df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
+                                          fmt=ref_timestamp_fmt, scale=ref_timestamp_scale)
             vals[f] = df[f]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
