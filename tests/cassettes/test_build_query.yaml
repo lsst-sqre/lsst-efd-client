@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:51 GMT
+      - Wed, 27 Oct 2021 17:15:15 GMT
       Request-Id:
-      - d67194e8-8841-11eb-82a7-0242ac110002
+      - 736e54b4-3749-11ec-80c5-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - d67194e8-8841-11eb-82a7-0242ac110002
+      - 736e54b4-3749-11ec-80c5-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:51 GMT
+      - Wed, 27 Oct 2021 17:15:15 GMT
       Request-Id:
-      - d67d13d5-8841-11eb-82a8-0242ac110002
+      - 7374e06a-3749-11ec-80c6-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - d67d13d5-8841-11eb-82a8-0242ac110002
+      - 7374e06a-3749-11ec-80c6-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3067,7 +3067,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.25.1
+      - python-requests/2.26.0
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/
   response:
@@ -3083,7 +3083,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Mar 2021 23:29:52 GMT
+      - Wed, 27 Oct 2021 17:15:15 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3099,7 +3099,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.25.1
+      - python-requests/2.26.0
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
   response:
@@ -3114,7 +3114,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Mar 2021 23:29:52 GMT
+      - Wed, 27 Oct 2021 17:15:15 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3140,9 +3140,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:53 GMT
+      - Wed, 27 Oct 2021 17:15:15 GMT
       Request-Id:
-      - d74fcc42-8841-11eb-82a9-0242ac110002
+      - 73d84e07-3749-11ec-80c7-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3150,7 +3150,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - d74fcc42-8841-11eb-82a9-0242ac110002
+      - 73d84e07-3749-11ec-80c7-0242ac110002
     status:
       code: 200
       message: OK

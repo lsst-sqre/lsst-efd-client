@@ -199,6 +199,12 @@ async def test_time_series(efd_client, start_stop):
     assert len(df) == 600
     for c in ['foo', 'bar']:
         assert c in df.columns
+    df_legacy = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                                    start_stop[0], start_stop[1], convert_influx_index=True)
+    # Test that df_legacy is in UTC assuming df was in TAI
+    t = Time(df.index).unix - Time(df_legacy.index).unix
+    assert numpy.all(t == 37.)
+
 
 
 @pytest.mark.asyncio
@@ -208,6 +214,10 @@ async def test_top_n(efd_client, start_stop):
     assert len(df) == 10
     for c in ['foo', 'bar']:
         assert c in df.columns
+    df_legacy = await efd_client.select_top_n('lsst.sal.fooSubSys.test', ['foo', 'bar'], 10, convert_influx_index=True)
+    # Test that df_legacy is in UTC assuming df was in TAI
+    t = Time(df.index).unix - Time(df_legacy.index).unix
+    assert numpy.all(t == 37.)
     df = await efd_client.select_top_n('lsst.sal.fooSubSys.test', ['foo', 'bar'], 10, time_cut=start_stop[0])
     assert len(df) == 10
     for c in ['foo', 'bar']:
@@ -224,6 +234,9 @@ async def test_packed_time_series(efd_client, start_stop, test_query_res):
     df_exp = test_query_res
     df = await efd_client.select_packed_time_series('lsst.sal.fooSubSys.test', ['ham', 'egg', 'hamegg'],
                                                     start_stop[0], start_stop[1])
+    # The column 'times' holds the input to the packed time index.
+    # It's typically in TAI, but the returned index should be in UTC
+    assert numpy.all((numpy.array(df['times']) - Time(df.index).unix) == 37.)
     assert numpy.all((df.index[1:] - df.index[:-1]).total_seconds() > 0)
     assert numpy.all(df == df_exp)
     for c in ['ham', 'egg']:

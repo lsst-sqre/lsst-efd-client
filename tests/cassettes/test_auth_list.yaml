@@ -9,7 +9,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.25.1
+      - python-requests/2.26.0
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/
   response:
@@ -25,7 +25,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Mar 2021 23:29:42 GMT
+      - Wed, 27 Oct 2021 17:15:12 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -41,22 +41,22 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.25.1
+      - python-requests/2.26.0
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["summit_efd", "ncsa_teststand_efd", "ldf_stable_efd", "ldf_int_efd",
-        "base_efd", "test_efd"]'
+      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
+        "ncsa_teststand_efd", "ldf_stable_efd"]'
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '93'
+      - '117'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Mar 2021 23:29:42 GMT
+      - Wed, 27 Oct 2021 17:15:13 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
