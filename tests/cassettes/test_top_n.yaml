@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:18 GMT
       Request-Id:
-      - d9b260da-8841-11eb-82bc-0242ac110002
+      - 75ba4833-3749-11ec-80db-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - d9b260da-8841-11eb-82bc-0242ac110002
+      - 75ba4833-3749-11ec-80db-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:19 GMT
       Request-Id:
-      - d9bc1aa9-8841-11eb-82bd-0242ac110002
+      - 75c0914b-3749-11ec-80dc-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - d9bc1aa9-8841-11eb-82bd-0242ac110002
+      - 75c0914b-3749-11ec-80dc-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3067,7 +3067,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.25.1
+      - python-requests/2.26.0
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/
   response:
@@ -3083,7 +3083,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:19 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3099,7 +3099,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.25.1
+      - python-requests/2.26.0
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
   response:
@@ -3114,7 +3114,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:19 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3141,9 +3141,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:19 GMT
       Request-Id:
-      - da1fe349-8841-11eb-82be-0242ac110002
+      - 7610e7ee-3749-11ec-80dd-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3151,7 +3151,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - da1fe349-8841-11eb-82be-0242ac110002
+      - 7610e7ee-3749-11ec-80dd-0242ac110002
     status:
       code: 200
       message: OK
@@ -3161,8 +3161,44 @@ interactions:
       chunked: 'false'
       db: client_test
       epoch: ns
-      q: SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE time < '2020-01-28T23:07:19.000Z' GROUP
+      q: SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" GROUP
         BY * ORDER BY DESC LIMIT 10
+    headers: {}
+    method: POST
+    uri: http://localhost:8086/query
+  response:
+    body:
+      string: '{"results":[{"statement_id":0,"series":[{"name":"lsst.sal.fooSubSys.test","columns":["time","foo","bar"],"values":[[1580253654130000116,639.7115383554086,412.95670660851044],[1580253653130000116,527.8299627670391,251.5883684981646],[1580253652130000116,302.0978550333843,522.9851878092993],[1580253651130000116,119.15223560989924,722.7357017993289],[1580253650130000116,78.63582881235591,738.1373025405038],[1580253649130000116,114.45750583373433,432.11072453075116],[1580253648130000116,30.691991168460277,707.3682712996813],[1580253647130000116,194.6875442938789,766.3306346508733],[1580253646130000116,393.2775728656448,610.9309793659244],[1580253645130000116,452.91172911880733,192.52381192178618]]}]}]}
+
+        '
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 27 Oct 2021 17:15:19 GMT
+      Request-Id:
+      - 7611eb38-3749-11ec-80de-0242ac110002
+      Transfer-Encoding:
+      - chunked
+      X-Influxdb-Build:
+      - OSS
+      X-Influxdb-Version:
+      - 1.7.6
+      X-Request-Id:
+      - 7611eb38-3749-11ec-80de-0242ac110002
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:8086/query
+- request:
+    body:
+      chunked: 'false'
+      db: client_test
+      epoch: ns
+      q: SELECT foo, bar FROM "client_test"."autogen"."lsst.sal.fooSubSys.test" WHERE
+        time < '2020-01-28T23:07:19.000Z' GROUP BY * ORDER BY DESC LIMIT 10
     headers: {}
     method: POST
     uri: http://localhost:8086/query
@@ -3177,9 +3213,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:19 GMT
       Request-Id:
-      - da1fe349-8841-11eb-82be-0242ac110002
+      - 76133dc4-3749-11ec-80df-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3187,7 +3223,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - da1fe349-8841-11eb-82be-0242ac110002
+      - 76133dc4-3749-11ec-80df-0242ac110002
     status:
       code: 200
       message: OK
@@ -3212,9 +3248,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Mar 2021 23:29:57 GMT
+      - Wed, 27 Oct 2021 17:15:19 GMT
       Request-Id:
-      - da22a62e-8841-11eb-82bf-0242ac110002
+      - 761449b7-3749-11ec-80e0-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3222,7 +3258,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - da22a62e-8841-11eb-82bf-0242ac110002
+      - 761449b7-3749-11ec-80e0-0242ac110002
     status:
       code: 200
       message: OK
