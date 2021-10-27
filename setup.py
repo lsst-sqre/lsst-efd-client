@@ -35,7 +35,8 @@ test_requirements = ['pytest>=3',
 
 extra_requirements = {
     'dev': [
-        'documenteer[pipelines]'
+        'documenteer[pipelines]',
+        'docutils<0.18'
     ]
 }
 
