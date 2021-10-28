@@ -26,7 +26,7 @@ setup_requirements = [
                       'watchdog==0.9.0',
                       'flake8==3.7.8',
                       'coverage==4.5.4',
-                      'twine==1.14.0',
+                      'twine',
                       'pytest-runner', ]
 
 test_requirements = ['pytest>=3',
