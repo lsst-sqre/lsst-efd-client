@@ -65,3 +65,10 @@ History
 * This changes the convention to using UTC as the internal representation.
   This mirrors a change in the influxDB to store index timestamps as UTC.
   There is a switch to convert the index from TAI to UTC, but the default is to assume UTC everywhere.
+
+0.9.1 (2021-10-28)
+------------------
+
+* Fix various bugs left over from the UTC conversions.
+  The most important of these is correcting how the index for packed time series is handled.
+  The other is in the implementation fow how we attempt to handle legacy databases with the index still in TAI.
