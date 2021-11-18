@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:19 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Request-Id:
-      - 761dad54-3749-11ec-80e1-0242ac110002
+      - 966c99d5-489d-11ec-8055-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 761dad54-3749-11ec-80e1-0242ac110002
+      - 966c99d5-489d-11ec-8055-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:19 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Request-Id:
-      - 76240df0-3749-11ec-80e2-0242ac110002
+      - 967324c4-489d-11ec-8056-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 76240df0-3749-11ec-80e2-0242ac110002
+      - 967324c4-489d-11ec-8056-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3083,7 +3083,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 27 Oct 2021 17:15:19 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3105,16 +3105,16 @@ interactions:
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
-        "https://schema-registry-foo.bar.baz"}'
+        "https://schema-registry-foo.bar.baz", "port": "443"}'
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '123'
+      - '138'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 27 Oct 2021 17:15:20 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3140,9 +3140,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:20 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Request-Id:
-      - 7672413a-3749-11ec-80e3-0242ac110002
+      - 96bab942-489d-11ec-8057-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3150,7 +3150,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 7672413a-3749-11ec-80e3-0242ac110002
+      - 96bab942-489d-11ec-8057-0242ac110002
     status:
       code: 200
       message: OK
@@ -3179,9 +3179,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:20 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Request-Id:
-      - 767301f2-3749-11ec-80e4-0242ac110002
+      - 96bb7303-489d-11ec-8058-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3189,7 +3189,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 767301f2-3749-11ec-80e4-0242ac110002
+      - 96bb7303-489d-11ec-8058-0242ac110002
     status:
       code: 200
       message: OK
@@ -3214,9 +3214,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:20 GMT
+      - Thu, 18 Nov 2021 18:30:21 GMT
       Request-Id:
-      - 7693c206-3749-11ec-80e5-0242ac110002
+      - 96de5ba0-489d-11ec-8059-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3224,7 +3224,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 7693c206-3749-11ec-80e5-0242ac110002
+      - 96de5ba0-489d-11ec-8059-0242ac110002
     status:
       code: 200
       message: OK

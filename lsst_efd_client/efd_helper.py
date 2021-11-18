@@ -24,8 +24,6 @@ class EfdClient:
         Name of the EFD instance for which to retrieve credentials.
     db_name : `str`, optional
         Name of the database within influxDB to query ('efd' by default).
-    port : `str`, optional
-        Port to use when querying the database ('443' by default).
     creds_service : `str`, optional
         URL to the service to retrieve credentials
         (``https://roundtable.lsst.codes/segwarides/`` by default).
@@ -43,15 +41,18 @@ class EfdClient:
     subclasses = {}
     deployment = ''
 
-    def __init__(self, efd_name, db_name='efd', port='443',
+    def __init__(self, efd_name, db_name='efd',
                  creds_service='https://roundtable.lsst.codes/segwarides/',
                  client=None):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, schema_registry, user, password = self.auth.get_auth(efd_name)
-        self.schema_registry = schema_registry
+        host, schema_registry, port, user, password = self.auth.get_auth(efd_name)
+        if schema_registry[-1] == '/':
+            self.schema_registry = schema_registry[-1] + ':' + port + '/'
+        else:
+            self.schema_registry = schema_registry + ':' + port
         if client is None:
-            health_url = f'https://{host}/health'
+            health_url = f'https://{host}:{port}/health'
             response = requests.get(health_url)
             if response.status_code != 200:
                 raise RuntimeError(f'InfluxDB server, {host}, does not appear ready to '

@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:15 GMT
+      - Thu, 18 Nov 2021 18:30:17 GMT
       Request-Id:
-      - 73e25179-3749-11ec-80c8-0242ac110002
+      - 946706aa-489d-11ec-803c-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 73e25179-3749-11ec-80c8-0242ac110002
+      - 946706aa-489d-11ec-803c-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:15 GMT
+      - Thu, 18 Nov 2021 18:30:18 GMT
       Request-Id:
-      - 73e89864-3749-11ec-80c9-0242ac110002
+      - 946d4f55-489d-11ec-803d-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 73e89864-3749-11ec-80c9-0242ac110002
+      - 946d4f55-489d-11ec-803d-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3083,7 +3083,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 27 Oct 2021 17:15:16 GMT
+      - Thu, 18 Nov 2021 18:30:18 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3105,16 +3105,16 @@ interactions:
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
-        "https://schema-registry-foo.bar.baz"}'
+        "https://schema-registry-foo.bar.baz", "port": "443"}'
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '123'
+      - '138'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 27 Oct 2021 17:15:16 GMT
+      - Thu, 18 Nov 2021 18:30:18 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3140,9 +3140,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 27 Oct 2021 17:15:16 GMT
+      - Thu, 18 Nov 2021 18:30:18 GMT
       Request-Id:
-      - 743ababe-3749-11ec-80ca-0242ac110002
+      - 94b76b6b-489d-11ec-803e-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3150,7 +3150,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 743ababe-3749-11ec-80ca-0242ac110002
+      - 94b76b6b-489d-11ec-803e-0242ac110002
     status:
       code: 200
       message: OK
