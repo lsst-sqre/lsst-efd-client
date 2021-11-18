@@ -87,13 +87,18 @@ def test_auth_registry(auth_creds):
 
 
 @pytest.mark.vcr
+def test_auth_port(auth_creds):
+    assert auth_creds[2] == '443'
+
+
+@pytest.mark.vcr
 def test_auth_user(auth_creds):
-    assert auth_creds[2] == 'foo'
+    assert auth_creds[3] == 'foo'
 
 
 @pytest.mark.vcr
 def test_auth_password(auth_creds):
-    assert auth_creds[3] == 'bar'
+    assert auth_creds[4] == 'bar'
 
 
 @pytest.mark.vcr
