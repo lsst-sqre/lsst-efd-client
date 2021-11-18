@@ -72,3 +72,9 @@ History
 * Fix various bugs left over from the UTC conversions.
   The most important of these is correcting how the index for packed time series is handled.
   The other is in the implementation fow how we attempt to handle legacy databases with the index still in TAI.
+
+0.10.0 (2021-11-18)
+------------------
+
+* Change how ports are handled.
+  This forces the port to be sent with the rest of the auth information and removes the ability to pass an override port.
