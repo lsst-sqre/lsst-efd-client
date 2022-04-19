@@ -187,7 +187,7 @@ class EfdClient:
             `~astropy.time.TimeDelta`, compute a range centered on the start
             time (default is `False`).
         index : `int`, optional
-            For indexed topics set this to the index of the topic to query
+            When index is used, add an 'AND {CSCName}ID = index' to the query.
             (default is `None`).
         convert_influx_index : `bool`, optional
             Convert influxDB time index from TAI to UTC?  This is for using legacy
@@ -261,7 +261,7 @@ class EfdClient:
             `~astropy.time.TimeDelta`, compute a range centered on the start
             time (default is `False`).
         index : `int`, optional
-            For indexed topics set this to the index of the topic to query
+            When index is used, add an 'AND {CSCName}ID = index' to the query.
             (default is `None`).
         convert_influx_index : `bool`, optional
             Convert influxDB time index from TAI to UTC?  This is for using legacy
@@ -295,8 +295,8 @@ class EfdClient:
             Use a time cut instead of the most recent entry.
             (default is `None`)
         index : `int`, optional
-            For indexed topics set this to the index of the topic to query
-            (default is `None`)
+            When index is used, add an 'AND {CSCName}ID = index' to the query.
+            (default is `None`).
         convert_influx_index : `bool`, optional
             Convert influxDB time index from TAI to UTC?  This is for using legacy
             instances that may still have timestamps stored internally as TAI.
@@ -399,8 +399,8 @@ class EfdClient:
             `~astropy.time.TimeDelta`, compute a range centered on the start
             time (default is `False`).
         index : `int`, optional
-            For indexed topics set this to the index of the topic to query
-            (default is `False`).
+            When index is used, add an 'AND {CSCName}ID = index' to the query.
+            (default is `None`).
         ref_timestamp_col : `str`, optional
             Name of the field name to use to assign timestamps to unpacked
             vector fields (default is 'cRIO_timestamp').
