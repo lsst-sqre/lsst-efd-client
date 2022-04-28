@@ -181,6 +181,32 @@ async def test_parse_schema(efd_client):
 
 
 @pytest.mark.asyncio
+async def test_bad_units(efd_client):
+    """Test that the EfdClient._parse_schema method raises when a bad astropy unit definition is passed."""
+    # Body that we expect the registry API to return given the request.
+    expected_body = {
+        "schema": json.dumps(
+             {
+                "name": "schema1",
+                "type": "record",
+                "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "not_a_unit"},
+                          ],
+              }
+        ),
+        "subject": "schema1",
+        "version": 1,
+        "id": 2,
+    }
+
+    body = json.dumps(expected_body).encode("utf-8")
+    client = MockRegistryApi(body=body)
+
+    schema = await client.get_schema_by_subject("schema1")
+    with pytest.raises(ValueError):
+        result = efd_client._parse_schema("schema1", schema)
+
+
+@pytest.mark.asyncio
 @pytest.mark.vcr
 async def test_topics(efd_client):
     topics = await efd_client.get_topics()
