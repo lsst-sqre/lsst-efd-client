@@ -7,7 +7,6 @@ from astropy.time import Time, TimeDelta
 import astropy.units as u
 from functools import partial
 from kafkit.registry.aiohttp import RegistryApi
-import logging
 import pandas as pd
 import requests
 
@@ -137,7 +136,7 @@ class EfdClient:
             result = pd.DataFrame()
         elif convert_influx_index:
             times = Time(result.index, format='datetime', scale='tai')
-            result = result.set_index(times.utc.datetime) 
+            result = result.set_index(times.utc.datetime)
         return result
 
     async def get_topics(self):
@@ -167,7 +166,8 @@ class EfdClient:
         fields = await self._do_query(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
         return fields['fieldKey'].tolist()
 
-    def build_time_range_query(self, topic_name, fields, start, end, is_window=False, index=None, convert_influx_index=False):
+    def build_time_range_query(self, topic_name, fields, start, end, is_window=False,
+                               index=None, convert_influx_index=False):
         """Build a query based on a time range.
 
         Parameters
@@ -204,7 +204,7 @@ class EfdClient:
             raise TypeError('The first time argument must be a time stamp')
 
         if not start.scale == 'utc':
-            raise ValueError(f'Timestamps must be in UTC.')
+            raise ValueError('Timestamps must be in UTC.')
 
         if convert_influx_index:  # Implies index is in TAI, so query should be in TAI
             start = start.tai
@@ -218,7 +218,7 @@ class EfdClient:
                 end_str = (start + end).isot
         elif isinstance(end, Time):
             if not end.scale == 'utc':
-                raise ValueError(f'Timestamps must be in UTC.')
+                raise ValueError('Timestamps must be in UTC.')
             if convert_influx_index:
                 end = end.tai
             start_str = start.isot
@@ -241,7 +241,8 @@ class EfdClient:
         # Build query here
         return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
-    async def select_time_series(self, topic_name, fields, start, end, is_window=False, index=None, convert_influx_index=False):
+    async def select_time_series(self, topic_name, fields, start, end, is_window=False,
+                                 index=None, convert_influx_index=False):
         """Select a time series for a set of topics in a single subsystem
 
         Parameters
@@ -274,12 +275,14 @@ class EfdClient:
         result : `pandas.DataFrame`
             A `pandas.DataFrame` containing the results of the query.
         """
-        query = self.build_time_range_query(topic_name, fields, start, end, is_window, index, convert_influx_index)
+        query = self.build_time_range_query(topic_name, fields, start, end, is_window,
+                                            index, convert_influx_index)
         # Do query
         ret = await self._do_query(query, convert_influx_index)
         return ret
 
-    async def select_top_n(self, topic_name, fields, num, time_cut=None, index=None, convert_influx_index=False):
+    async def select_top_n(self, topic_name, fields, num, time_cut=None,
+                           index=None, convert_influx_index=False):
         """Select the most recent N samples from a set of topics in a single subsystem.
         This method does not guarantee sort direction of the returned rows.
 
@@ -476,7 +479,8 @@ class EfdClient:
                 vals['description'].append(None)
             if 'units' in f:
                 vals['units'].append(f['units'])
-                if vals['units'][-1] == 'unitless' or vals['units'][-1] == 'dimensionless':  # Special case not having units
+                # Special case not having units
+                if vals['units'][-1] == 'unitless' or vals['units'][-1] == 'dimensionless':
                     vals['aunits'].append(u.dimensionless_unscaled)
                 else:
                     vals['aunits'].append(u.Unit(vals['units'][-1]))

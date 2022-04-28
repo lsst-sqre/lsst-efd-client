@@ -35,7 +35,8 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
         A `pandas.DataFrame` containing the results of the query.
     """
 
-    packed_fields = [k for k in packed_dataframe.keys() if k.startswith(base_field) and k[len(base_field):].isdigit()]
+    packed_fields = [k for k in packed_dataframe.keys() if k.startswith(base_field)
+                     and k[len(base_field):].isdigit()]
     packed_fields = sorted(packed_fields, key=lambda k: int(k[len(base_field):]))  # sort by pack ID
     npack = len(packed_fields)
     if npack % stride != 0:
