@@ -61,9 +61,11 @@ def expected_strs():
 def test_df():
     return pd.read_hdf(PATH/'efd_test.hdf')
 
+
 @pytest.fixture
 def test_query_res():
     return pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
+
 
 @pytest.fixture
 def start_stop():
@@ -155,7 +157,7 @@ async def test_parse_schema(efd_client):
                            {"name": "b", "type": "double", "description": "Description 2", "units": "meter"},
                            {"name": "c", "type": "float", "description": "Description 3", "units": "gram"},
                            {"name": "d", "type": "string", "description": "Description 4", "units": "torr"}
-                          ],
+                           ],
               }
         ),
         "subject": "schema1",
@@ -181,6 +183,32 @@ async def test_parse_schema(efd_client):
 
 
 @pytest.mark.asyncio
+async def test_bad_units(efd_client):
+    """Test that the EfdClient._parse_schema method raises when a bad astropy unit definition is passed."""
+    # Body that we expect the registry API to return given the request.
+    expected_body = {
+        "schema": json.dumps(
+             {
+                "name": "schema1",
+                "type": "record",
+                "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "not_unit"},
+                           ],
+              }
+        ),
+        "subject": "schema1",
+        "version": 1,
+        "id": 2,
+    }
+
+    body = json.dumps(expected_body).encode("utf-8")
+    client = MockRegistryApi(body=body)
+
+    schema = await client.get_schema_by_subject("schema1")
+    with pytest.raises(ValueError):
+        efd_client._parse_schema("schema1", schema)
+
+
+@pytest.mark.asyncio
 @pytest.mark.vcr
 async def test_topics(efd_client):
     topics = await efd_client.get_topics()
@@ -197,7 +225,7 @@ async def test_fields(efd_client, test_df):
 
 
 @pytest.mark.asyncio
-#@pytest.mark.vcr
+@pytest.mark.vcr
 async def test_time_series(efd_client, start_stop):
     df = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], start_stop[1])
@@ -208,11 +236,10 @@ async def test_time_series(efd_client, start_stop):
                                                     start_stop[0], start_stop[1], convert_influx_index=True)
     # Test that df_legacy is in UTC assuming df was in TAI
     t = Time(df.index).unix - Time(df_legacy.index).unix
-    assert numpy.all(t == 0.)  # The indexes should all be the same since both the time range and 
-                               # index were shifted
+    # The indexes should all be the same since both the time range and index were shifted
+    assert numpy.all(t == 0.)
     # But the queries should be different
     assert not efd_client.query_history[-2] == efd_client.query_history[-1]
-
 
 
 @pytest.mark.asyncio
@@ -222,7 +249,8 @@ async def test_top_n(efd_client, start_stop):
     assert len(df) == 10
     for c in ['foo', 'bar']:
         assert c in df.columns
-    df_legacy = await efd_client.select_top_n('lsst.sal.fooSubSys.test', ['foo', 'bar'], 10, convert_influx_index=True)
+    df_legacy = await efd_client.select_top_n('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                              10, convert_influx_index=True)
     # Test that df_legacy is in UTC assuming df was in TAI
     t = Time(df.index).unix - Time(df_legacy.index).unix
     assert numpy.all(t == 37.)
