@@ -78,3 +78,8 @@ History
 
 * Change how ports are handled.
   This forces the port to be sent with the rest of the auth information and removes the ability to pass an override port.
+
+0.10.2 (2022-05-03)
+-------------------
+
+* Allow astropy to raise an exception for malformed units in the topic schema..
