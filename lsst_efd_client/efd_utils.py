@@ -9,6 +9,7 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
                              ref_timestamp_col="cRIO_timestamp", fmt='unix_tai',
                              scale='tai'):
     """Select fields that are time samples and unpack them into a dataframe.
+
     Parameters
     ----------
     packed_dataframe : `pandas.DataFrame`
@@ -18,17 +19,17 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
         vector entries.
     stride : `int`, optional
         Only use every stride value when unpacking.  Must be a factor
-        of the number of packed values.
-        (1 by default)
+        of the number of packed values. (1 by default)
     ref_timestamp_col : `str`, optional
         Name of the field name to use to assign timestamps to unpacked
         vector fields (default is 'cRIO_timestamp').
     fmt : `str`, optional
-        Format to give to the `astropy.Time` constructor.  Defaults to
+        Format to give to the `astropy.time.Time` constructor.  Defaults to
         'unix_tai' since most internal timestamp columns are in TAI.
     scale : `str`, optional
-        Time scale to give to the `astropy.Time` constructor.  Defaults to
+        Time scale to give to the `astropy.time.Time` constructor.  Defaults to
         'tai'.
+
     Returns
     -------
     result : `pandas.DataFrame`
