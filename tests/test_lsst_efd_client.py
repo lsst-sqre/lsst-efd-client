@@ -129,6 +129,16 @@ def test_build_query(efd_client, start_stop, expected_strs):
     qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], start_stop[1])
     assert qstr == expected_strs[1].strip()
+    # Check old indexed component fetching works
+    qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                             start_stop[0], start_stop[1],
+                                             index=2, use_old_csc_indexing=True)
+    assert qstr == expected_strs[4].strip()
+    # Check new indexed component fetching works
+    qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                             start_stop[0], start_stop[1],
+                                             index=2)
+    assert qstr == expected_strs[5].strip()
 
 
 @pytest.mark.vcr
@@ -240,6 +250,9 @@ async def test_time_series(efd_client, start_stop):
     assert numpy.all(t == 0.)
     # But the queries should be different
     assert not efd_client.query_history[-2] == efd_client.query_history[-1]
+    df1 = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                              start_stop[0], start_stop[1], index=2)
+    assert "salIndex" in df1.columns
 
 
 @pytest.mark.asyncio
