@@ -211,8 +211,8 @@ class EfdClient:
 
         if isinstance(end, TimeDelta):
             if is_window:
-                start_str = (start - end/2).isot
-                end_str = (start + end/2).isot
+                start_str = (start - end / 2).isot
+                end_str = (start + end / 2).isot
             else:
                 start_str = start.isot
                 end_str = (start + end).isot
@@ -224,7 +224,7 @@ class EfdClient:
             start_str = start.isot
             end_str = end.isot
         else:
-            raise TypeError('The second time argument must be the time stamp for the end ' +
+            raise TypeError('The second time argument must be the time stamp for the end '
                             'or a time delta.')
         index_str = ''
         if index:
@@ -434,7 +434,7 @@ class EfdClient:
         field_list = []
         for k in qfields:
             field_list += qfields[k]
-        result = await self.select_time_series(topic_name, field_list+[ref_timestamp_col, ],
+        result = await self.select_time_series(topic_name, field_list + [ref_timestamp_col, ],
                                                start, end, is_window=is_window, index=index,
                                                convert_influx_index=convert_influx_index)
         vals = {}

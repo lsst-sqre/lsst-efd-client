@@ -36,7 +36,7 @@ def auth_client():
 @pytest.fixture
 @pytest.mark.vcr
 async def efd_client():
-    df = pd.read_hdf(PATH/'efd_test.hdf')
+    df = pd.read_hdf(PATH / 'efd_test.hdf')
     async with InfluxDBClient(db='client_test', mode='async', output='dataframe') as client:
         await client.create_database()
         await client.write(df, measurement='lsst.sal.fooSubSys.test')
@@ -51,7 +51,7 @@ async def efd_client():
 @pytest.fixture
 def expected_strs():
     expected = []
-    with open(PATH/'expected.txt', 'r') as fh:
+    with open(PATH / 'expected.txt', 'r') as fh:
         for line in fh.readlines():
             expected.append(line)
     return expected
@@ -59,12 +59,12 @@ def expected_strs():
 
 @pytest.fixture
 def test_df():
-    return pd.read_hdf(PATH/'efd_test.hdf')
+    return pd.read_hdf(PATH / 'efd_test.hdf')
 
 
 @pytest.fixture
 def test_query_res():
-    return pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
+    return pd.read_hdf(PATH / 'packed_data.hdf', key='test_data')
 
 
 @pytest.fixture
@@ -150,7 +150,7 @@ async def test_parse_schema(efd_client):
     # Body that we expect the registry API to return given the request.
     expected_body = {
         "schema": json.dumps(
-             {
+            {
                 "name": "schema1",
                 "type": "record",
                 "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "second"},
@@ -158,7 +158,7 @@ async def test_parse_schema(efd_client):
                            {"name": "c", "type": "float", "description": "Description 3", "units": "gram"},
                            {"name": "d", "type": "string", "description": "Description 4", "units": "torr"}
                            ],
-              }
+            }
         ),
         "subject": "schema1",
         "version": 1,
@@ -188,12 +188,12 @@ async def test_bad_units(efd_client):
     # Body that we expect the registry API to return given the request.
     expected_body = {
         "schema": json.dumps(
-             {
+            {
                 "name": "schema1",
                 "type": "record",
                 "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "not_unit"},
                            ],
-              }
+            }
         ),
         "subject": "schema1",
         "version": 1,
@@ -284,7 +284,7 @@ def test_resample(test_query_res):
     df_copy = df.copy()
     df_copy.set_index(df_copy.index + pd.Timedelta(0.05, unit='s'), inplace=True)
     df_out = resample(df, df_copy)
-    assert len(df_out) == 2*len(df)
+    assert len(df_out) == 2 * len(df)
 
 
 def test_rendezvous(test_df):
