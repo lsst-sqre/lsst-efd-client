@@ -37,9 +37,11 @@ def auth_client():
 @pytest.mark.vcr
 async def efd_client():
     df = pd.read_hdf(PATH / 'efd_test.hdf')
+    df1 = pd.read_hdf(PATH / 'efd_index_test.hdf', 'table')
     async with InfluxDBClient(db='client_test', mode='async', output='dataframe') as client:
         await client.create_database()
         await client.write(df, measurement='lsst.sal.fooSubSys.test')
+        await client.write(df1, measurement='lsst.sal.barSubSys.test')
         efd_client = EfdClient('test_efd', db_name='client_test', client=client)
         # Monkey patch the client to point to an existing schema registry
         # Note this is only available if on the NCSA VPN
@@ -222,8 +224,9 @@ async def test_bad_units(efd_client):
 @pytest.mark.vcr
 async def test_topics(efd_client):
     topics = await efd_client.get_topics()
-    assert len(topics) == 1
-    assert topics[0] == 'lsst.sal.fooSubSys.test'
+    assert len(topics) == 2
+    assert topics[1] == 'lsst.sal.fooSubSys.test'
+    assert topics[0] == 'lsst.sal.barSubSys.test'
 
 
 @pytest.mark.asyncio
@@ -250,9 +253,16 @@ async def test_time_series(efd_client, start_stop):
     assert numpy.all(t == 0.)
     # But the queries should be different
     assert not efd_client.query_history[-2] == efd_client.query_history[-1]
-    df1 = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+    # Test indexed query
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
                                               start_stop[0], start_stop[1], index=2)
-    assert "salIndex" in df1.columns
+    assert len(df1) == 100
+    assert numpy.all(df1["eggs"] == 10)
+    # Old index should return an empty dataframe
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop[0], start_stop[1], index=2,
+                                              use_old_csc_indexing=True)
+    assert len(df1) == 0
 
 
 @pytest.mark.asyncio
