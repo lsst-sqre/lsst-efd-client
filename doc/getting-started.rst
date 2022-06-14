@@ -37,6 +37,6 @@ Set this flag to `True` in order to get the old indexing scheme.
 The TTS conversion to SAL 7 will take place on June 21, 2022.
 However, the TTS EFD operates on a 30 day rotation, so the older indexing will phase out approximately 30 days after the upgrade happens.
 The summit, and by fiat the LDF replica, will convert to SAL 7 on July 6, 2022.
-Since neither database operates with a retention policy, two separate queries must be constructed in order to get data selected on index spanning the above date.
+Since neither database operates with a retention policy, two separate queries must be constructed in order to get data selected on an index spanning the above date.
 
 .. _lsst-sqre/notebook-demo repository: https://github.com/lsst-sqre/notebook-demo/tree/master/efd_examples
