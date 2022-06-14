@@ -74,6 +74,11 @@ def start_stop():
     time = Time('2020-01-28T23:07:19.00', format='isot', scale='utc')
     return (time, time + TimeDelta(600, format='sec'))
 
+@pytest.fixture
+def start_stop_old():
+    time = Time('2020-01-27T23:07:19.00', format='isot', scale='utc')
+    return (time, time + TimeDelta(600, format='sec'))
+
 
 def test_bad_endpoint():
     with pytest.raises(IOError):
@@ -239,7 +244,7 @@ async def test_fields(efd_client, test_df):
 
 @pytest.mark.asyncio
 @pytest.mark.vcr
-async def test_time_series(efd_client, start_stop):
+async def test_time_series(efd_client, start_stop, start_stop_old):
     df = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], start_stop[1])
     assert len(df) == 600
@@ -258,7 +263,17 @@ async def test_time_series(efd_client, start_stop):
                                               start_stop[0], start_stop[1], index=2)
     assert len(df1) == 100
     assert numpy.all(df1["eggs"] == 10)
-    # Old index should return an empty dataframe
+    # Old index should return similar sized dataframe
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop_old[0], start_stop_old[1], index=2,
+                                              use_old_csc_indexing=True)
+    assert len(df1) == 100
+    assert numpy.all(df1["eggs"] == 10)
+    # Using new indexing across old time frame should return empty dataframe
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop_old[0], start_stop_old[1], index=2)
+    assert len(df1) == 0
+    # Using old indexing across new time frame should return empty dataframe
     df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
                                               start_stop[0], start_stop[1], index=2,
                                               use_old_csc_indexing=True)
