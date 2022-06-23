@@ -36,10 +36,12 @@ def auth_client():
 @pytest.fixture
 @pytest.mark.vcr
 async def efd_client():
-    df = pd.read_hdf(PATH/'efd_test.hdf')
+    df = pd.read_hdf(PATH / 'efd_test.hdf')
+    df1 = pd.read_hdf(PATH / 'efd_index_test.hdf', 'table')
     async with InfluxDBClient(db='client_test', mode='async', output='dataframe') as client:
         await client.create_database()
         await client.write(df, measurement='lsst.sal.fooSubSys.test')
+        await client.write(df1, measurement='lsst.sal.barSubSys.test')
         efd_client = EfdClient('test_efd', db_name='client_test', client=client)
         # Monkey patch the client to point to an existing schema registry
         # Note this is only available if on the NCSA VPN
@@ -51,7 +53,7 @@ async def efd_client():
 @pytest.fixture
 def expected_strs():
     expected = []
-    with open(PATH/'expected.txt', 'r') as fh:
+    with open(PATH / 'expected.txt', 'r') as fh:
         for line in fh.readlines():
             expected.append(line)
     return expected
@@ -59,17 +61,22 @@ def expected_strs():
 
 @pytest.fixture
 def test_df():
-    return pd.read_hdf(PATH/'efd_test.hdf')
+    return pd.read_hdf(PATH / 'efd_test.hdf')
 
 
 @pytest.fixture
 def test_query_res():
-    return pd.read_hdf(PATH/'packed_data.hdf', key='test_data')
+    return pd.read_hdf(PATH / 'packed_data.hdf', key='test_data')
 
 
 @pytest.fixture
 def start_stop():
     time = Time('2020-01-28T23:07:19.00', format='isot', scale='utc')
+    return (time, time + TimeDelta(600, format='sec'))
+
+@pytest.fixture
+def start_stop_old():
+    time = Time('2020-01-27T23:07:19.00', format='isot', scale='utc')
     return (time, time + TimeDelta(600, format='sec'))
 
 
@@ -129,6 +136,16 @@ def test_build_query(efd_client, start_stop, expected_strs):
     qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], start_stop[1])
     assert qstr == expected_strs[1].strip()
+    # Check old indexed component fetching works
+    qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                             start_stop[0], start_stop[1],
+                                             index=2, use_old_csc_indexing=True)
+    assert qstr == expected_strs[4].strip()
+    # Check new indexed component fetching works
+    qstr = efd_client.build_time_range_query('lsst.sal.fooSubSys.test', ['foo', 'bar'],
+                                             start_stop[0], start_stop[1],
+                                             index=2)
+    assert qstr == expected_strs[5].strip()
 
 
 @pytest.mark.vcr
@@ -150,7 +167,7 @@ async def test_parse_schema(efd_client):
     # Body that we expect the registry API to return given the request.
     expected_body = {
         "schema": json.dumps(
-             {
+            {
                 "name": "schema1",
                 "type": "record",
                 "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "second"},
@@ -158,7 +175,7 @@ async def test_parse_schema(efd_client):
                            {"name": "c", "type": "float", "description": "Description 3", "units": "gram"},
                            {"name": "d", "type": "string", "description": "Description 4", "units": "torr"}
                            ],
-              }
+            }
         ),
         "subject": "schema1",
         "version": 1,
@@ -188,12 +205,12 @@ async def test_bad_units(efd_client):
     # Body that we expect the registry API to return given the request.
     expected_body = {
         "schema": json.dumps(
-             {
+            {
                 "name": "schema1",
                 "type": "record",
                 "fields": [{"name": "a", "type": "int", "description": "Description 1", "units": "not_unit"},
                            ],
-              }
+            }
         ),
         "subject": "schema1",
         "version": 1,
@@ -212,8 +229,9 @@ async def test_bad_units(efd_client):
 @pytest.mark.vcr
 async def test_topics(efd_client):
     topics = await efd_client.get_topics()
-    assert len(topics) == 1
-    assert topics[0] == 'lsst.sal.fooSubSys.test'
+    assert len(topics) == 2
+    assert topics[1] == 'lsst.sal.fooSubSys.test'
+    assert topics[0] == 'lsst.sal.barSubSys.test'
 
 
 @pytest.mark.asyncio
@@ -226,7 +244,7 @@ async def test_fields(efd_client, test_df):
 
 @pytest.mark.asyncio
 @pytest.mark.vcr
-async def test_time_series(efd_client, start_stop):
+async def test_time_series(efd_client, start_stop, start_stop_old):
     df = await efd_client.select_time_series('lsst.sal.fooSubSys.test', ['foo', 'bar'],
                                              start_stop[0], start_stop[1])
     assert len(df) == 600
@@ -240,6 +258,26 @@ async def test_time_series(efd_client, start_stop):
     assert numpy.all(t == 0.)
     # But the queries should be different
     assert not efd_client.query_history[-2] == efd_client.query_history[-1]
+    # Test indexed query
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop[0], start_stop[1], index=2)
+    assert len(df1) == 100
+    assert numpy.all(df1["eggs"] == 10)
+    # Old index should return similar sized dataframe
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop_old[0], start_stop_old[1], index=2,
+                                              use_old_csc_indexing=True)
+    assert len(df1) == 100
+    assert numpy.all(df1["eggs"] == 10)
+    # Using new indexing across old time frame should return empty dataframe
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop_old[0], start_stop_old[1], index=2)
+    assert len(df1) == 0
+    # Using old indexing across new time frame should return empty dataframe
+    df1 = await efd_client.select_time_series('lsst.sal.barSubSys.test', ['eggs', 'ham'],
+                                              start_stop[0], start_stop[1], index=2,
+                                              use_old_csc_indexing=True)
+    assert len(df1) == 0
 
 
 @pytest.mark.asyncio
@@ -284,7 +322,7 @@ def test_resample(test_query_res):
     df_copy = df.copy()
     df_copy.set_index(df_copy.index + pd.Timedelta(0.05, unit='s'), inplace=True)
     df_out = resample(df, df_copy)
-    assert len(df_out) == 2*len(df)
+    assert len(df_out) == 2 * len(df)
 
 
 def test_rendezvous(test_df):

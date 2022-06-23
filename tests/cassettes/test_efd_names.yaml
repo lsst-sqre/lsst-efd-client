@@ -9,7 +9,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/
   response:
@@ -25,7 +25,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:14 GMT
+      - Wed, 01 Jun 2022 21:38:16 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -41,7 +41,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/
   response:
@@ -57,7 +57,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:14 GMT
+      - Wed, 01 Jun 2022 21:38:16 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -73,13 +73,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -88,7 +88,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:14 GMT
+      - Wed, 01 Jun 2022 21:38:16 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -104,13 +104,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -119,7 +119,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:15 GMT
+      - Wed, 01 Jun 2022 21:38:17 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -135,13 +135,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -150,7 +150,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:15 GMT
+      - Wed, 01 Jun 2022 21:38:17 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -166,13 +166,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -181,7 +181,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:16 GMT
+      - Wed, 01 Jun 2022 21:38:17 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -197,13 +197,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -212,7 +212,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:16 GMT
+      - Wed, 01 Jun 2022 21:38:18 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -228,13 +228,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -243,7 +243,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:16 GMT
+      - Wed, 01 Jun 2022 21:38:18 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -259,13 +259,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -274,7 +274,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:16 GMT
+      - Wed, 01 Jun 2022 21:38:18 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -290,13 +290,13 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/list
   response:
     body:
-      string: '["ldf_int_efd", "base_efd", "tucson_teststand_efd", "test_efd", "summit_efd",
-        "ncsa_teststand_efd", "ldf_stable_efd"]'
+      string: '["tucson_teststand_efd", "test_efd", "summit_efd", "ncsa_teststand_efd",
+        "ldf_stable_efd", "ldf_int_efd", "base_efd"]'
     headers:
       Connection:
       - keep-alive
@@ -305,7 +305,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:17 GMT
+      - Wed, 01 Jun 2022 21:38:18 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:

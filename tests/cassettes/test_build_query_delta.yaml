@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Nov 2021 18:30:17 GMT
+      - Wed, 01 Jun 2022 21:40:03 GMT
       Request-Id:
-      - 946706aa-489d-11ec-803c-0242ac110002
+      - 65723ef7-e1f3-11ec-813a-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 946706aa-489d-11ec-803c-0242ac110002
+      - 65723ef7-e1f3-11ec-813a-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,438 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Nov 2021 18:30:18 GMT
+      - Wed, 01 Jun 2022 21:40:03 GMT
       Request-Id:
-      - 946d4f55-489d-11ec-803d-0242ac110002
+      - 6579b657-e1f3-11ec-813b-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 946d4f55-489d-11ec-803d-0242ac110002
+      - 6579b657-e1f3-11ec-813b-0242ac110002
+    status:
+      code: 204
+      message: No Content
+    url: http://localhost:8086/write?db=client_test
+- request:
+    body: 'lsst.sal.barSubSys.test salIndex=1i,ham=96.64702802414995,eggs=5i 1580252839000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=198.0358946800541,eggs=10i 1580252839500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.4650847094216,eggs=5i 1580252840000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=198.47549645781942,eggs=10i 1580252840500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.20656191687718,eggs=5i 1580252841000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=196.179775919561,eggs=10i 1580252841500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.46797973384581,eggs=5i 1580252842000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=180.43883592544702,eggs=10i 1580252842500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=107.19825628301031,eggs=5i 1580252843000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=183.05391974481026,eggs=10i 1580252843500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=102.32555806386719,eggs=5i 1580252844000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=195.4062864489381,eggs=10i 1580252844500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.55163231374353,eggs=5i 1580252845000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=207.83709174236662,eggs=10i 1580252845500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=100.57917743364281,eggs=5i 1580252846000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=191.8908007122071,eggs=10i 1580252846500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.50206308932609,eggs=5i 1580252847000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=197.5082500423717,eggs=10i 1580252847500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.70060154945038,eggs=5i 1580252848000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=209.97090099179218,eggs=10i 1580252848500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.08495850495446,eggs=5i 1580252849000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=215.52509300246004,eggs=10i 1580252849500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=102.79888070439286,eggs=5i 1580252850000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=210.7299488634823,eggs=10i 1580252850500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=95.98717870521668,eggs=5i 1580252851000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=188.51490337931565,eggs=10i 1580252851500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=88.67804990390151,eggs=5i 1580252852000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=213.38135608666715,eggs=10i 1580252852500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=101.83492907111432,eggs=5i 1580252853000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=214.55120894835622,eggs=10i 1580252853500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.41226771709013,eggs=5i 1580252854000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=207.57705848490252,eggs=10i 1580252854500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.79509861450148,eggs=5i 1580252855000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=214.3858377776219,eggs=10i 1580252855500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=85.64670714818578,eggs=5i 1580252856000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=198.33516996258575,eggs=10i 1580252856500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.0641146080851,eggs=5i 1580252857000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=218.09899786248508,eggs=10i 1580252857500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=106.32742336827715,eggs=5i 1580252858000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=213.45137596992294,eggs=10i 1580252858500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=109.98909095708717,eggs=5i 1580252859000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=207.84068255347697,eggs=10i 1580252859500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=103.58858883270506,eggs=5i 1580252860000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=221.01862064136301,eggs=10i 1580252860500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=94.55978583330379,eggs=5i 1580252861000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=193.548744535395,eggs=10i 1580252861500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=104.97773149673127,eggs=5i 1580252862000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=191.0415889111516,eggs=10i 1580252862500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=104.57432790101016,eggs=5i 1580252863000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=192.62035843782837,eggs=10i 1580252863500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=93.39647462462061,eggs=5i 1580252864000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=190.5437015546411,eggs=10i 1580252864500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.86150824386397,eggs=5i 1580252865000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.28370320095806,eggs=10i 1580252865500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.39093456760703,eggs=5i 1580252866000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=210.67908272202075,eggs=10i 1580252866500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.5563301098711,eggs=5i 1580252867000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=193.87829058656953,eggs=10i 1580252867500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=92.72482504257849,eggs=5i 1580252868000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=203.7823994498295,eggs=10i 1580252868500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.02429073188283,eggs=5i 1580252869000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=198.79880342056333,eggs=10i 1580252869500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.95132567772487,eggs=5i 1580252870000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=201.32549005903576,eggs=10i 1580252870500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.00893081750313,eggs=5i 1580252871000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=195.7523968276108,eggs=10i 1580252871500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=101.22892066048635,eggs=5i 1580252872000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=208.5571710783306,eggs=10i 1580252872500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=93.6591699474958,eggs=5i 1580252873000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=194.44255332859996,eggs=10i 1580252873500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=108.32370212879219,eggs=5i 1580252874000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=192.26626061518374,eggs=10i 1580252874500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.85886668519821,eggs=5i 1580252875000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.53889199831266,eggs=10i 1580252875500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.3047809955111,eggs=5i 1580252876000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=220.1497424492593,eggs=10i 1580252876500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=106.22775148050127,eggs=5i 1580252877000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=203.11485118186178,eggs=10i 1580252877500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=104.19493181600147,eggs=5i 1580252878000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.32611038041648,eggs=10i 1580252878500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=98.72423121684248,eggs=5i 1580252879000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=202.74860789916514,eggs=10i 1580252879500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=102.42298776513402,eggs=5i 1580252880000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=193.18965739741395,eggs=10i 1580252880500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=100.16353372735028,eggs=5i 1580252881000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.80764711857194,eggs=10i 1580252881500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=84.97660736552818,eggs=5i 1580252882000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=203.299558055915,eggs=10i 1580252882500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=106.32987704859076,eggs=5i 1580252883000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=221.89661814094666,eggs=10i 1580252883500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=86.2024516505677,eggs=5i 1580252884000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=189.13684409575092,eggs=10i 1580252884500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=103.75473139390633,eggs=5i 1580252885000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=199.04535605137664,eggs=10i 1580252885500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=103.71769770608756,eggs=5i 1580252886000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=190.59996163252535,eggs=10i 1580252886500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=97.83651300102474,eggs=5i 1580252887000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=196.94781642654567,eggs=10i 1580252887500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=88.93764513672457,eggs=5i 1580252888000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=196.05744003665936,eggs=10i 1580252888500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.54321200378784,eggs=5i 1580252889000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=189.9278762174995,eggs=10i 1580252889500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.29233647114712,eggs=5i 1580252890000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=215.64065518386815,eggs=10i 1580252890500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=92.8274810651346,eggs=5i 1580252891000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.04275986101925,eggs=10i 1580252891500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=95.43763810399194,eggs=5i 1580252892000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=188.31995307268107,eggs=10i 1580252892500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=100.68135175849034,eggs=5i 1580252893000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=206.77942749420907,eggs=10i 1580252893500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.82999219229778,eggs=5i 1580252894000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=205.70349406742568,eggs=10i 1580252894500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.86406699093635,eggs=5i 1580252895000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=198.97599587968446,eggs=10i 1580252895500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=93.0532048582041,eggs=5i 1580252896000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=205.55171047895843,eggs=10i 1580252896500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=97.81384211703502,eggs=5i 1580252897000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=214.65810920345206,eggs=10i 1580252897500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=107.8286850175111,eggs=5i 1580252898000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=201.81729949362503,eggs=10i 1580252898500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=84.7284291317184,eggs=5i 1580252899000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=196.2038328476624,eggs=10i 1580252899500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.66267855809878,eggs=5i 1580252900000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=207.09360855411506,eggs=10i 1580252900500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=91.89845289322638,eggs=5i 1580252901000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=199.24678128948256,eggs=10i 1580252901500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=103.84912825697761,eggs=5i 1580252902000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=182.1678134250683,eggs=10i 1580252902500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=101.26240624734247,eggs=5i 1580252903000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=207.49021905236052,eggs=10i 1580252903500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=103.53334343886867,eggs=5i 1580252904000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=211.849808751853,eggs=10i 1580252904500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=94.47594365238889,eggs=5i 1580252905000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=221.053366174986,eggs=10i 1580252905500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=107.31300314713177,eggs=5i 1580252906000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=197.7891325538924,eggs=10i 1580252906500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=94.96747311771163,eggs=5i 1580252907000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=174.08226645264978,eggs=10i 1580252907500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=102.40575307502156,eggs=5i 1580252908000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=192.42066687307818,eggs=10i 1580252908500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=94.58723422735225,eggs=5i 1580252909000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=187.18146128728242,eggs=10i 1580252909500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=107.26265159833045,eggs=5i 1580252910000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=193.15105248871268,eggs=10i 1580252910500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=95.57824851476009,eggs=5i 1580252911000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=201.3587318940637,eggs=10i 1580252911500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=113.60694632067387,eggs=5i 1580252912000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=208.59430902462265,eggs=10i 1580252912500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.80145134798708,eggs=5i 1580252913000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=202.06448227252702,eggs=10i 1580252913500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.55574823143482,eggs=5i 1580252914000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=194.24983621156488,eggs=10i 1580252914500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=88.34842913957593,eggs=5i 1580252915000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=201.5641222410052,eggs=10i 1580252915500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.21627076031184,eggs=5i 1580252916000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=200.2645952946299,eggs=10i 1580252916500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=100.1875661882436,eggs=5i 1580252917000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=201.94511899850036,eggs=10i 1580252917500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.15448746129216,eggs=5i 1580252918000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=194.33275200265712,eggs=10i 1580252918500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.45791446410257,eggs=5i 1580252919000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.56277697644927,eggs=10i 1580252919500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=93.58945002845874,eggs=5i 1580252920000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=211.99254092361227,eggs=10i 1580252920500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=102.68083155560468,eggs=5i 1580252921000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=192.09200266168014,eggs=10i 1580252921500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=92.60230045093024,eggs=5i 1580252922000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=200.2208541496497,eggs=10i 1580252922500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=96.38177459212238,eggs=5i 1580252923000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=204.41791055598674,eggs=10i 1580252923500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.41804142450377,eggs=5i 1580252924000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=178.4447850044386,eggs=10i 1580252924500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=100.8000234472049,eggs=5i 1580252925000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=216.10475204600084,eggs=10i 1580252925500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=94.6999267804624,eggs=5i 1580252926000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=209.13816824309967,eggs=10i 1580252926500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=90.33120144310993,eggs=5i 1580252927000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=199.96315085640182,eggs=10i 1580252927500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.30821340539836,eggs=5i 1580252928000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=206.36667952977373,eggs=10i 1580252928500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=100.80904971205432,eggs=5i 1580252929000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=212.36692176203272,eggs=10i 1580252929500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.11774527159527,eggs=5i 1580252930000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=227.42862606746658,eggs=10i 1580252930500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=102.87301492420892,eggs=5i 1580252931000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=212.02757204767656,eggs=10i 1580252931500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=92.09551646421626,eggs=5i 1580252932000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=209.74086400490253,eggs=10i 1580252932500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=99.73685521263707,eggs=5i 1580252933000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=191.00238588874285,eggs=10i 1580252933500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=105.48210527605005,eggs=5i 1580252934000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=199.01783519583452,eggs=10i 1580252934500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=89.78340661972277,eggs=5i 1580252935000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=210.2868505426063,eggs=10i 1580252935500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=97.3838168825433,eggs=5i 1580252936000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=201.6781475505807,eggs=10i 1580252936500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=93.77974117620158,eggs=5i 1580252937000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=199.47568782961082,eggs=10i 1580252937500000000
+
+      lsst.sal.barSubSys.test salIndex=1i,ham=101.69638463934929,eggs=5i 1580252938000000000
+
+      lsst.sal.barSubSys.test salIndex=2i,ham=189.7319914203641,eggs=10i 1580252938500000000'
+    headers: {}
+    method: POST
+    uri: http://localhost:8086/write?db=client_test
+  response:
+    body:
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 01 Jun 2022 21:40:03 GMT
+      Request-Id:
+      - 6586b838-e1f3-11ec-813c-0242ac110002
+      X-Influxdb-Build:
+      - OSS
+      X-Influxdb-Version:
+      - 1.7.6
+      X-Request-Id:
+      - 6586b838-e1f3-11ec-813c-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3067,7 +3490,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/
   response:
@@ -3083,7 +3506,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:18 GMT
+      - Wed, 01 Jun 2022 21:40:04 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3099,7 +3522,7 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.26.0
+      - python-requests/2.25.1
     method: GET
     uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
   response:
@@ -3114,7 +3537,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 18 Nov 2021 18:30:18 GMT
+      - Wed, 01 Jun 2022 21:40:04 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3140,9 +3563,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 18 Nov 2021 18:30:18 GMT
+      - Wed, 01 Jun 2022 21:40:04 GMT
       Request-Id:
-      - 94b76b6b-489d-11ec-803e-0242ac110002
+      - 65db5bd1-e1f3-11ec-813d-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3150,7 +3573,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 94b76b6b-489d-11ec-803e-0242ac110002
+      - 65db5bd1-e1f3-11ec-813d-0242ac110002
     status:
       code: 200
       message: OK

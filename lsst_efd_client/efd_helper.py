@@ -167,7 +167,8 @@ class EfdClient:
         return fields['fieldKey'].tolist()
 
     def build_time_range_query(self, topic_name, fields, start, end, is_window=False,
-                               index=None, convert_influx_index=False):
+                               index=None, convert_influx_index=False,
+                               use_old_csc_indexing=False):
         """Build a query based on a time range.
 
         Parameters
@@ -187,13 +188,17 @@ class EfdClient:
             `~astropy.time.TimeDelta`, compute a range centered on the start
             time (default is `False`).
         index : `int`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query.
+            When index is used, add an 'AND salIndex = index' to the query.
             (default is `None`).
         convert_influx_index : `bool`, optional
             Convert influxDB time index from TAI to UTC?  This is for using legacy
             instances that may still have timestamps stored internally as TAI.
             Modern instances all store index timestamps as UTC natively.
             Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
 
         Returns
         -------
@@ -211,8 +216,8 @@ class EfdClient:
 
         if isinstance(end, TimeDelta):
             if is_window:
-                start_str = (start - end/2).isot
-                end_str = (start + end/2).isot
+                start_str = (start - end / 2).isot
+                end_str = (start + end / 2).isot
             else:
                 start_str = start.isot
                 end_str = (start + end).isot
@@ -224,12 +229,16 @@ class EfdClient:
             start_str = start.isot
             end_str = end.isot
         else:
-            raise TypeError('The second time argument must be the time stamp for the end ' +
+            raise TypeError('The second time argument must be the time stamp for the end '
                             'or a time delta.')
         index_str = ''
         if index:
-            parts = topic_name.split('.')
-            index_str = f' AND {parts[-2]}ID = {index}'  # The CSC name is always the penultimate
+            if use_old_csc_indexing:
+                parts = topic_name.split('.')
+                index_name = f'{parts[-2]}ID'  # The CSC name is always the penultimate
+            else:
+                index_name = 'salIndex'
+            index_str = f' AND {index_name} = {index}'
         timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"  # influxdb demands last Z
 
         if isinstance(fields, str):
@@ -242,7 +251,8 @@ class EfdClient:
         return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
     async def select_time_series(self, topic_name, fields, start, end, is_window=False,
-                                 index=None, convert_influx_index=False):
+                                 index=None, convert_influx_index=False,
+                                 use_old_csc_indexing=False):
         """Select a time series for a set of topics in a single subsystem
 
         Parameters
@@ -262,13 +272,17 @@ class EfdClient:
             `~astropy.time.TimeDelta`, compute a range centered on the start
             time (default is `False`).
         index : `int`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query.
+            When index is used, add an 'AND salIndex = index' to the query.
             (default is `None`).
         convert_influx_index : `bool`, optional
             Convert influxDB time index from TAI to UTC?  This is for using legacy
             instances that may still have timestamps stored internally as TAI.
             Modern instances all store index timestamps as UTC natively.
             Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
 
         Returns
         -------
@@ -276,13 +290,15 @@ class EfdClient:
             A `pandas.DataFrame` containing the results of the query.
         """
         query = self.build_time_range_query(topic_name, fields, start, end, is_window,
-                                            index, convert_influx_index)
+                                            index, convert_influx_index,
+                                            use_old_csc_indexing)
         # Do query
         ret = await self._do_query(query, convert_influx_index)
         return ret
 
     async def select_top_n(self, topic_name, fields, num, time_cut=None,
-                           index=None, convert_influx_index=False):
+                           index=None, convert_influx_index=False,
+                           use_old_csc_indexing=False):
         """Select the most recent N samples from a set of topics in a single subsystem.
         This method does not guarantee sort direction of the returned rows.
 
@@ -298,13 +314,17 @@ class EfdClient:
             Use a time cut instead of the most recent entry.
             (default is `None`)
         index : `int`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query.
+            When index is used, add an 'AND salIndex = index' to the query.
             (default is `None`).
         convert_influx_index : `bool`, optional
             Convert influxDB time index from TAI to UTC?  This is for using legacy
             instances that may still have timestamps stored internally as TAI.
             Modern instances all store index timestamps as UTC natively.
             Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
 
         Returns
         -------
@@ -320,9 +340,13 @@ class EfdClient:
         if time_cut:
             pstr = f" WHERE time < '{time_cut}Z'"
         if index:
-            parts = topic_name.split('.')
+            if use_old_csc_indexing:
+                parts = topic_name.split('.')
+                index_name = f'{parts[-2]}ID'  # The CSC name is always the penultimate
+            else:
+                index_name = 'salIndex'
             # The CSC name is always the penultimate
-            istr = f'{parts[-2]}ID = {index}'
+            istr = f'{index_name} = {index}'
             if pstr != '':
                 pstr += f' AND {istr}'
             else:
@@ -381,7 +405,7 @@ class EfdClient:
     async def select_packed_time_series(self, topic_name, base_fields, start, end,
                                         is_window=False, index=None, ref_timestamp_col="cRIO_timestamp",
                                         ref_timestamp_fmt='unix_tai', ref_timestamp_scale='tai',
-                                        convert_influx_index=False):
+                                        convert_influx_index=False, use_old_csc_indexing=False):
         """Select fields that are time samples and unpack them into a dataframe.
 
         Parameters
@@ -402,7 +426,7 @@ class EfdClient:
             `~astropy.time.TimeDelta`, compute a range centered on the start
             time (default is `False`).
         index : `int`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query.
+            When index is used, add an 'AND salIndex = index' to the query.
             (default is `None`).
         ref_timestamp_col : `str`, optional
             Name of the field name to use to assign timestamps to unpacked
@@ -418,6 +442,10 @@ class EfdClient:
             instances that may still have timestamps stored internally as TAI.
             Modern instances all store index timestamps as UTC natively.
             Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
 
         Returns
         -------
@@ -434,9 +462,10 @@ class EfdClient:
         field_list = []
         for k in qfields:
             field_list += qfields[k]
-        result = await self.select_time_series(topic_name, field_list+[ref_timestamp_col, ],
+        result = await self.select_time_series(topic_name, field_list + [ref_timestamp_col, ],
                                                start, end, is_window=is_window, index=index,
-                                               convert_influx_index=convert_influx_index)
+                                               convert_influx_index=convert_influx_index,
+                                               use_old_csc_indexing=use_old_csc_indexing)
         vals = {}
         for f in base_fields:
             df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
