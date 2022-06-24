@@ -83,3 +83,9 @@ History
 -------------------
 
 * Allow astropy to raise an exception for malformed units in the topic schema..
+
+0.10.3 (2022-05-24)
+-------------------
+
+* Add timeout option to the EFD client.
+  Set the `aiohttp.client` timeout when working with chunked queries. Set a default timeout of 900 seconds.
