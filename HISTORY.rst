@@ -51,7 +51,7 @@ History
 ------------------
 
 * Deal gracefully with topics that have no description or units (Thanks Angelo!)
-* Add add a parameter to allow a time threshold when selecting top N (Thanks Michael!)
+* Add a parameter to allow a time threshold when selecting top N (Thanks Michael!)
 
 0.8.3 (2021-06-11)
 ------------------
@@ -82,10 +82,11 @@ History
 0.10.2 (2022-05-03)
 -------------------
 
-* Allow astropy to raise an exception for malformed units in the topic schema..
+* Allow astropy to raise an exception for malformed units in the topic schema.
 
-0.10.3 (2022-05-24)
+0.11.0 (2022-05-24)
 -------------------
 
+* Updates to API calls to handle SAL 7 change to indexed component ID field.
 * Add timeout option to the EFD client.
   Set the `aiohttp.client` timeout when working with chunked queries. Set a default timeout of 900 seconds.
