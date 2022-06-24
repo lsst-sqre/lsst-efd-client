@@ -26,12 +26,12 @@ class EfdClient:
     creds_service : `str`, optional
         URL to the service to retrieve credentials
         (``https://roundtable.lsst.codes/segwarides/`` by default).
+    timeout : `int`, optional
+        Timeout in seconds for async requests (`aiohttp.client`). The default
+        timeout is 900 seconds.
     client : `object`, optional
         An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
         The intent is to be able to substitute a mocked client for testing.
-    timeout : `int`, optional
-        Timeout in seconds for async requests. If None, the default
-        `aiohttp.client` timeout of 300 seconds is used.
     """
 
     influx_client = None
@@ -45,7 +45,7 @@ class EfdClient:
 
     def __init__(self, efd_name, db_name='efd',
                  creds_service='https://roundtable.lsst.codes/segwarides/',
-                 client=None, timeout=None):
+                 timeout=900, client=None):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
         host, schema_registry, port, user, password = self.auth.get_auth(efd_name)
