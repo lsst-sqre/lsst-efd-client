@@ -48,11 +48,8 @@ class EfdClient:
                  timeout=900, client=None):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, schema_registry, port, user, password = self.auth.get_auth(efd_name)
-        if schema_registry[-1] == '/':
-            self.schema_registry = schema_registry[-1] + ':' + port + '/'
-        else:
-            self.schema_registry = schema_registry + ':' + port
+        host, schema_registry_url, port, user, password = self.auth.get_auth(efd_name)
+        self.schema_registry_url = schema_registry_url
         if client is None:
             health_url = f'https://{host}:{port}/health'
             response = requests.get(health_url)
@@ -494,7 +491,7 @@ class EfdClient:
         """
         async with aiohttp.ClientSession() as http_session:
             registry_api = RegistryApi(
-                session=http_session, url=self.schema_registry
+                session=http_session, url=self.schema_registry_url
             )
             schema = await registry_api.get_schema_by_subject(f'{topic}-value')
             return self._parse_schema(topic, schema)
