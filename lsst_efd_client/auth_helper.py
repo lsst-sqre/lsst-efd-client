@@ -43,13 +43,13 @@ class NotebookAuth:
         -------
         credentials : `tuple`
             A tuple containing the host name, schema registry, port,
-            user name, and password.
+            username, password and path.
         """
         response = requests.get(urljoin(self.service_endpoint, f"creds/{alias}"))
         if response.status_code == 200:
             data = response.json()
             return (data['host'], data['schema_registry'], data['port'],
-                    data['username'], data['password'])
+                    data['username'], data['password'], data['path'])
         elif response.status_code == 404:
             raise ValueError(f"No credentials available for {alias}. "
                              "Try list_auth to get a list of available keys.")

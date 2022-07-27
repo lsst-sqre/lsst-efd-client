@@ -90,3 +90,8 @@ History
 * Updates to API calls to handle SAL 7 change to indexed component ID field.
 * Add timeout option to the EFD client.
   Set the `aiohttp.client` timeout when working with chunked queries. Set a default timeout of 900 seconds.
+
+0.12.0 (2022-07-27)
+-------------------
+
+* The auth helper can now use a path attribute to connect to an InfluxDB instance.

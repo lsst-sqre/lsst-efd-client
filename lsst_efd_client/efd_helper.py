@@ -9,6 +9,7 @@ from functools import partial
 from kafkit.registry.aiohttp import RegistryApi
 import pandas as pd
 import requests
+from urllib.parse import urljoin
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
@@ -48,19 +49,17 @@ class EfdClient:
                  timeout=900, client=None):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, schema_registry, port, user, password = self.auth.get_auth(efd_name)
-        if schema_registry[-1] == '/':
-            self.schema_registry = schema_registry[-1] + ':' + port + '/'
-        else:
-            self.schema_registry = schema_registry + ':' + port
+        host, schema_registry_url, port, user, password, path = self.auth.get_auth(efd_name)
+        self.schema_registry_url = schema_registry_url
         if client is None:
-            health_url = f'https://{host}:{port}/health'
+            health_url = urljoin(f'https://{host}:{port}', f'{path}health')
             response = requests.get(health_url)
             if response.status_code != 200:
-                raise RuntimeError(f'InfluxDB server, {host}, does not appear ready to '
-                                   f'recieve queries.  Recieved code:{response.status_code} '
-                                   'when attempting the health check.')
+                raise RuntimeError(f'InfluxDB server is not ready. '
+                                   f'Recieved code:{response.status_code} '
+                                   f'when reaching {health_url}.')
             self.influx_client = aioinflux.InfluxDBClient(host=host,
+                                                          path=path,
                                                           port=port,
                                                           ssl=True,
                                                           username=user,
@@ -494,7 +493,7 @@ class EfdClient:
         """
         async with aiohttp.ClientSession() as http_session:
             registry_api = RegistryApi(
-                session=http_session, url=self.schema_registry
+                session=http_session, url=self.schema_registry_url
             )
             schema = await registry_api.get_schema_by_subject(f'{topic}-value')
             return self._parse_schema(topic, schema)
