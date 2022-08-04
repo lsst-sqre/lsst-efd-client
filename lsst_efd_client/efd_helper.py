@@ -12,7 +12,7 @@ import requests
 from urllib.parse import urljoin
 
 from .auth_helper import NotebookAuth
-from .efd_utils import merge_packed_time_series
+from .efd_utils import merge_packed_time_series, merge_packed_PSD
 
 
 class EfdClient:
@@ -476,6 +476,85 @@ class EfdClient:
             vals[f] = df[f]
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
+
+    async def select_packed_PSD(self, topic_name, base_fields, sensor_names, start, end,
+                                        is_window=False, index=None,
+                                        convert_influx_index=False, use_old_csc_indexing=False):
+        """Select fields that are Power Spectral Density (PSD) values and unpack them into a dataframe.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        base_fields :  `str` or `list`
+            Base field name(s) that will be expanded to query all
+            vector entries.
+        sensor_names :  `str` or `list`
+            Sensor name(s) that will be expanded to query all
+            vector entries.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
+        index : `int`, optional
+            When index is used, add an 'AND salIndex = index' to the query.
+            (default is `None`).
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC?  This is for using legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `pandas.DataFrame` containing the results of the query.
+        """
+        fields = await self.get_fields(topic_name)
+        if isinstance(sensor_names, str):
+            sensor_names = [sensor_names, ]
+        if isinstance(base_fields, str):
+            base_fields = [base_fields, ]
+        elif isinstance(base_fields, bytes):
+            base_fields = base_fields.decode()
+            base_fields = [base_fields, ]
+        qfields, els = self._make_fields(fields, base_fields)
+        field_list = ['sensorName', 'minPSDFrequency', 'maxPSDFrequency', 'numDataPoints']
+        for k in qfields:
+            field_list += qfields[k]
+        result = await self.select_time_series(topic_name, field_list,
+                                               start, end, is_window=is_window, index=index,
+                                               convert_influx_index=convert_influx_index,
+                                               use_old_csc_indexing=use_old_csc_indexing)
+        df_list = []
+        for base_field in base_fields:
+            sub_df_list = []
+            for sensor_name in sensor_names:
+                sub_df = merge_packed_PSD(result, base_field, sensor_name)
+                sub_df_list.append(sub_df)
+            df = pd.concat(sub_df_list)
+            df_list.append(df)
+        # The data in the EFD is already shifted by 1 msec to accomodate the different sensors
+        # The code below just continues that practice
+        time_offset = 1000 * len(qfields) # time offset in microseconds
+        for i, sub_df in enumerate(df_list):
+            if i == 0:
+                df = sub_df
+            else:
+                sub_df.index = sub_df.index + pd.DateOffset(microseconds=time_offset * i)
+                df = pd.concat([df, sub_df])
+        df.sort_index(inplace=True)
+        return df
 
     async def get_schema(self, topic):
         """Givent a topic, get a list of dictionaries describing the fields
