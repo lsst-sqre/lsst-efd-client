@@ -59,6 +59,47 @@ def merge_packed_time_series(packed_dataframe, base_field, stride=1,
     timestamps = Time(times, format=fmt, scale=scale)
     return pandas.DataFrame({base_field: output, "times": times}, index=timestamps.utc.datetime64)
 
+def merge_packed_PSD(packed_dataframe, base_field, sensor_name):
+    """Select fields that represent the Power Spectral Density of \
+    a sensor and unpack them into a dataframe.
+    Parameters
+    ----------
+    packed_dataframe : `pandas.DataFrame`
+        packed data frame containing the desired data
+    base_field :  `str`
+        Base field name that will be expanded to query all
+        vector entries.
+    sensor_name :  `str`
+        Name of the sensor of interest.
+    Returns
+    -------
+    result : `pandas.DataFrame`
+        A `pandas.DataFrame` containing the results of the query.
+    """
+    minPSDFrequency = packed_dataframe.minPSDFrequency[0]
+    maxPSDFrequency = packed_dataframe.maxPSDFrequency[0]
+    numDataPoints = packed_dataframe.numDataPoints[0]
+    packed_dataframe= packed_dataframe.loc[packed_dataframe['sensorName'] \
+                                           == sensor_name] # Choose sensor of interest
+    packed_fields = [k for k in packed_dataframe.keys()
+                     if k.startswith(base_field) and k[len(base_field):].isdigit()]
+    packed_fields = sorted(packed_fields, key=lambda k: int(k[len(base_field):]))  # sort by pack ID
+    npack = len(packed_fields)
+    assert npack == numDataPoints, "Number of packed data points doesn't agree!"
+    packed_len = len(packed_dataframe)
+    output = numpy.empty(npack * packed_len)
+    dFreq = float(maxPSDFrequency - minPSDFrequency) / (numDataPoints - 1)
+    columns = []
+    for i in range(npack):
+        label = f"{base_field}{i}"
+        columns.append(minPSDFrequency + i * dFreq)
+        output[i::npack] = packed_dataframe[label]
+    output = numpy.reshape(output, (packed_len, npack))
+    df = pandas.DataFrame(data=output, columns=columns, index=packed_dataframe.index)
+    # now add a column with the sensor name for the case when we retrieve multiple values
+    sensor_name_column = [f"{sensor_name}-{list(base_field)[-1]}"] * packed_len
+    df.insert(0,'SensorName',  sensor_name_column)
+    return df
 
 def resample(df1, df2, interp_type='time'):
     """Resample one DataFrame onto another.
