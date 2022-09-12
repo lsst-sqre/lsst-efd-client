@@ -2,7 +2,7 @@
 """
 
 import aiohttp
-import aioinflux
+import influxdb_client
 from astropy.time import Time, TimeDelta
 import astropy.units as u
 from functools import partial
@@ -31,12 +31,13 @@ class EfdClient:
         Timeout in seconds for async requests (`aiohttp.client`). The default
         timeout is 900 seconds.
     client : `object`, optional
-        An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
+        An instance of a class that ducktypes as
+        `influxdb_client.InfluxDBClient`.
         The intent is to be able to substitute a mocked client for testing.
     """
 
     influx_client = None
-    """The `aioinflux.client.InfluxDBClient` used for queries.
+    """The `influxdb_client.InfluxDBClient` used for queries.
 
     This should be used to execute queries not wrapped by this class.
     """
