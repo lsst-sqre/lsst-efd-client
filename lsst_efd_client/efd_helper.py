@@ -3,9 +3,11 @@
 
 import aiohttp
 import aioinflux
+import asyncio
+import nest_asyncio
 from astropy.time import Time, TimeDelta
 import astropy.units as u
-from functools import partial
+from functools import partial, wraps
 from kafkit.registry.aiohttp import RegistryApi
 import pandas as pd
 import requests
@@ -13,6 +15,18 @@ from urllib.parse import urljoin
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
+
+
+def sync_or_async(func):
+    """Decorator for allowing async functions to be executed synchronously."""
+
+    @wraps(func)
+    def inner(self, *args, **kwargs):
+        if self.is_async:
+            return func(self, *args, **kwargs)
+        return self._event_loop.run_until_complete(func(self, *args, **kwargs))
+
+    return inner
 
 
 class EfdClient:
@@ -46,7 +60,12 @@ class EfdClient:
 
     def __init__(self, efd_name, db_name='efd',
                  creds_service='https://roundtable.lsst.codes/segwarides/',
-                 timeout=900, client=None):
+                 timeout=900, client=None,
+                 asychronous=True):
+        if not asychronous:
+            nest_asyncio.apply()
+        self._event_loop = None if asychronous else asyncio.get_event_loop()
+
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
         host, schema_registry_url, port, user, password, path = self.auth.get_auth(efd_name)
@@ -65,12 +84,19 @@ class EfdClient:
                                                           username=user,
                                                           password=password,
                                                           db=db_name,
-                                                          mode='async',
+                                                          mode='async' if asychronous else 'blocking',
                                                           output='dataframe',
                                                           timeout=timeout)
+            self._mode = 'async' if asychronous else 'blocking'
         else:
             self.influx_client = client
         self.query_history = []
+
+    @property
+    def is_async(self):
+        """Was the InfluxDBClient instantiated in async mode?
+        """
+        return self._mode == 'async'
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -117,6 +143,7 @@ class EfdClient:
             raise NotImplementedError(f'There is no EFD client class implemented for {efd_name}.')
         return self.subclasses[efd_name](efd_name, *args, **kwargs)
 
+    @sync_or_async
     async def _do_query(self, query, convert_influx_index=False):
         """Query the influxDB and return results
 
@@ -133,7 +160,9 @@ class EfdClient:
             Results of the query in a `pandas.DataFrame`.
         """
         self.query_history.append(query)
-        result = await self.influx_client.query(query)
+        result = self.influx_client.query(query)
+        if self.is_async:
+            result = await result
         if not isinstance(result, pd.DataFrame) and not result:
             # aioinflux returns an empty dict for an empty query
             result = pd.DataFrame()
@@ -142,6 +171,7 @@ class EfdClient:
             result = result.set_index(times.utc.datetime)
         return result
 
+    @sync_or_async
     async def get_topics(self):
         """Query the list of possible topics.
 
@@ -150,9 +180,12 @@ class EfdClient:
         results : `list`
             List of valid topics in the database.
         """
-        topics = await self._do_query('SHOW MEASUREMENTS')
+        topics = self._do_query('SHOW MEASUREMENTS')
+        if self.is_async:
+            topics = await topics
         return topics['name'].tolist()
 
+    @sync_or_async
     async def get_fields(self, topic_name):
         """Query the list of field names for a topic.
 
@@ -166,7 +199,9 @@ class EfdClient:
         results : `list`
             List of field names in specified topic.
         """
-        fields = await self._do_query(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
+        fields = self._do_query(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
+        if self.is_async:
+            fields = await fields
         return fields['fieldKey'].tolist()
 
     def build_time_range_query(self, topic_name, fields, start, end, is_window=False,
@@ -253,6 +288,7 @@ class EfdClient:
         # Build query here
         return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
 
+    @sync_or_async
     async def select_time_series(self, topic_name, fields, start, end, is_window=False,
                                  index=None, convert_influx_index=False,
                                  use_old_csc_indexing=False):
@@ -296,9 +332,12 @@ class EfdClient:
                                             index, convert_influx_index,
                                             use_old_csc_indexing)
         # Do query
-        ret = await self._do_query(query, convert_influx_index)
+        ret = self._do_query(query, convert_influx_index)
+        if self.is_async:
+            ret = await ret
         return ret
 
+    @sync_or_async
     async def select_top_n(self, topic_name, fields, num, time_cut=None,
                            index=None, convert_influx_index=False,
                            use_old_csc_indexing=False):
@@ -365,7 +404,9 @@ class EfdClient:
         query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}"{pstr} {limit}'
 
         # Do query
-        ret = await self._do_query(query, convert_influx_index)
+        ret = self._do_query(query, convert_influx_index)
+        if self.is_async:
+            ret = await ret
         return ret
 
     def _make_fields(self, fields, base_fields):
@@ -405,6 +446,7 @@ class EfdClient:
             ret[bfield].sort(key=part)
         return ret, n
 
+    @sync_or_async
     async def select_packed_time_series(self, topic_name, base_fields, start, end,
                                         is_window=False, index=None, ref_timestamp_col="cRIO_timestamp",
                                         ref_timestamp_fmt='unix_tai', ref_timestamp_scale='tai',
@@ -455,7 +497,9 @@ class EfdClient:
         result : `pandas.DataFrame`
             A `pandas.DataFrame` containing the results of the query.
         """
-        fields = await self.get_fields(topic_name)
+        fields = self.get_fields(topic_name)
+        if self.is_async:
+            fields = await fields
         if isinstance(base_fields, str):
             base_fields = [base_fields, ]
         elif isinstance(base_fields, bytes):
@@ -465,10 +509,13 @@ class EfdClient:
         field_list = []
         for k in qfields:
             field_list += qfields[k]
-        result = await self.select_time_series(topic_name, field_list + [ref_timestamp_col, ],
-                                               start, end, is_window=is_window, index=index,
-                                               convert_influx_index=convert_influx_index,
-                                               use_old_csc_indexing=use_old_csc_indexing)
+        result = self.select_time_series(topic_name, field_list + [ref_timestamp_col, ],
+                                         start, end, is_window=is_window, index=index,
+                                         convert_influx_index=convert_influx_index,
+                                         use_old_csc_indexing=use_old_csc_indexing)
+        if self.is_async:
+            result = await result
+
         vals = {}
         for f in base_fields:
             df = merge_packed_time_series(result, f, ref_timestamp_col=ref_timestamp_col,
@@ -477,6 +524,7 @@ class EfdClient:
         vals.update({'times': df['times']})
         return pd.DataFrame(vals, index=df.index)
 
+    @sync_or_async
     async def get_schema(self, topic):
         """Givent a topic, get a list of dictionaries describing the fields
 
@@ -495,7 +543,9 @@ class EfdClient:
             registry_api = RegistryApi(
                 session=http_session, url=self.schema_registry_url
             )
-            schema = await registry_api.get_schema_by_subject(f'{topic}-value')
+            schema = registry_api.get_schema_by_subject(f'{topic}-value')
+            if self.is_async:
+                schema = await schema
             return self._parse_schema(topic, schema)
 
     @staticmethod
