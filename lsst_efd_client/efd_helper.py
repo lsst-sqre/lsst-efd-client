@@ -94,6 +94,8 @@ class EfdClient:
 
     @property
     def is_async(self):
+        """Was the InfluxDBClient instantiated in async mode?
+        """
         return self._mode == 'async'
 
     @classmethod
