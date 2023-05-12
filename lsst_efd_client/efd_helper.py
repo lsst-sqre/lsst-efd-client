@@ -4,6 +4,7 @@
 import aiohttp
 import aioinflux
 import asyncio
+import nest_asyncio
 from astropy.time import Time, TimeDelta
 import astropy.units as u
 from functools import partial, wraps
@@ -61,7 +62,10 @@ class EfdClient:
                  creds_service='https://roundtable.lsst.codes/segwarides/',
                  timeout=900, client=None,
                  asychronous=True):
-        self._event_loop = asyncio.get_event_loop()
+        if not asychronous:
+            nest_asyncio.apply()
+        self._event_loop = None if asychronous else asyncio.get_event_loop()
+
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
         host, schema_registry_url, port, user, password, path = self.auth.get_auth(efd_name)
