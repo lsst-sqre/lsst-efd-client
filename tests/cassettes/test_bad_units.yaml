@@ -19,9 +19,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 01 Jun 2022 21:40:03 GMT
+      - Wed, 01 Jun 2022 21:38:19 GMT
       Request-Id:
-      - 65723ef7-e1f3-11ec-813a-0242ac110002
+      - 271ab329-e1f3-11ec-8136-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -29,7 +29,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 65723ef7-e1f3-11ec-813a-0242ac110002
+      - 271ab329-e1f3-11ec-8136-0242ac110002
     status:
       code: 200
       message: OK
@@ -3044,15 +3044,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 01 Jun 2022 21:40:03 GMT
+      - Wed, 01 Jun 2022 21:38:19 GMT
       Request-Id:
-      - 6579b657-e1f3-11ec-813b-0242ac110002
+      - 2722db1c-e1f3-11ec-8137-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 6579b657-e1f3-11ec-813b-0242ac110002
+      - 2722db1c-e1f3-11ec-8137-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3467,15 +3467,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 01 Jun 2022 21:40:03 GMT
+      - Wed, 01 Jun 2022 21:38:19 GMT
       Request-Id:
-      - 6586b838-e1f3-11ec-813c-0242ac110002
+      - 272ff8a5-e1f3-11ec-8138-0242ac110002
       X-Influxdb-Build:
       - OSS
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 6586b838-e1f3-11ec-813c-0242ac110002
+      - 272ff8a5-e1f3-11ec-8138-0242ac110002
     status:
       code: 204
       message: No Content
@@ -3506,7 +3506,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 01 Jun 2022 21:40:04 GMT
+      - Wed, 01 Jun 2022 21:38:19 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3528,7 +3528,7 @@ interactions:
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
-        "https://schema-registry-foo.bar.baz", "port": "443"}'
+        "https://schema-registry-foo.bar.baz", "port": "443", "path": "."}'
     headers:
       Connection:
       - keep-alive
@@ -3537,7 +3537,7 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Wed, 01 Jun 2022 21:40:04 GMT
+      - Wed, 01 Jun 2022 21:38:19 GMT
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
     status:
@@ -3563,9 +3563,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 01 Jun 2022 21:40:04 GMT
+      - Wed, 01 Jun 2022 21:38:19 GMT
       Request-Id:
-      - 65db5bd1-e1f3-11ec-813d-0242ac110002
+      - 279b14b9-e1f3-11ec-8139-0242ac110002
       Transfer-Encoding:
       - chunked
       X-Influxdb-Build:
@@ -3573,7 +3573,7 @@ interactions:
       X-Influxdb-Version:
       - 1.7.6
       X-Request-Id:
-      - 65db5bd1-e1f3-11ec-813d-0242ac110002
+      - 279b14b9-e1f3-11ec-8139-0242ac110002
     status:
       code: 200
       message: OK
