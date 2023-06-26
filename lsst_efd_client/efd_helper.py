@@ -1,15 +1,16 @@
 """EFD client class
 """
 
+from functools import partial
+from urllib.parse import urljoin
+
 import aiohttp
 import aioinflux
-from astropy.time import Time, TimeDelta
 import astropy.units as u
-from functools import partial
-from kafkit.registry.aiohttp import RegistryApi
 import pandas as pd
 import requests
-from urllib.parse import urljoin
+from astropy.time import Time, TimeDelta
+from kafkit.registry.aiohttp import RegistryApi
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
