@@ -234,12 +234,11 @@ class EfdClient:
         if not isinstance(start, Time):
             raise TypeError("The first time argument must be a time stamp")
 
-        if not start.scale == "utc":
-            raise ValueError("Timestamps must be in UTC.")
-
         if convert_influx_index:
             # Implies index is in TAI, so query should be in TAI
             start = start.tai
+        else:
+            start = start.utc
 
         if isinstance(end, TimeDelta):
             if is_window:
@@ -249,10 +248,10 @@ class EfdClient:
                 start_str = start.isot
                 end_str = (start + end).isot
         elif isinstance(end, Time):
-            if not end.scale == "utc":
-                raise ValueError("Timestamps must be in UTC.")
             if convert_influx_index:
                 end = end.tai
+            else:
+                end = end.utc
             start_str = start.isot
             end_str = end.isot
         else:

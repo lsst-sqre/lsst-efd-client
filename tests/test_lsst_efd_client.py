@@ -159,6 +159,12 @@ async def test_build_query_delta(start_stop):
 
 
 @pytest.mark.asyncio
+async def test_build_query_tai(start_stop):
+    # Run `test_build_query` with the same times, but expressed as TAI.
+    await test_build_query(start_stop=[val.tai for val in start_stop])
+
+
+@pytest.mark.asyncio
 @safe_vcr.use_cassette()
 async def test_parse_schema():
     """Test the EfdClient._parse_schema method."""
