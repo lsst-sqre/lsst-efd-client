@@ -3528,7 +3528,7 @@ interactions:
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
-        "https://schema-registry-foo.bar.baz", "port": "443"}'
+        "https://schema-registry-foo.bar.baz", "port": "443", "path": "."}'
     headers:
       Connection:
       - keep-alive
