@@ -1,15 +1,16 @@
 """Authentication helpers
 """
 
-import requests
 from urllib.parse import urljoin
+
+import requests
 
 
 class NotebookAuth:
     """Class to help keep authentication credentials secret.
 
     Credentials can be retrieved either from a service endopint or
-    from a file on disk.  The credential location is checked in that order.
+    from a file on disk. The credential location is checked in that order.
 
     Parameters
     ----------
@@ -28,8 +29,10 @@ class NotebookAuth:
         if response.status_code == 200:
             self.service_endpoint = service_endpoint
         else:
-            raise RuntimeError(f"Credential service at {service_endpoint} failed with Error "
-                               f"{response.status_code}.")
+            raise RuntimeError(
+                f"Credential service at {service_endpoint} failed with Error "
+                f"{response.status_code}."
+            )
 
     def get_auth(self, alias):
         """Return the credentials as a tuple
@@ -48,11 +51,19 @@ class NotebookAuth:
         response = requests.get(urljoin(self.service_endpoint, f"creds/{alias}"))
         if response.status_code == 200:
             data = response.json()
-            return (data['host'], data['schema_registry'], data['port'],
-                    data['username'], data['password'], data['path'])
+            return (
+                data["host"],
+                data["schema_registry"],
+                data["port"],
+                data["username"],
+                data["password"],
+                data["path"],
+            )
         elif response.status_code == 404:
-            raise ValueError(f"No credentials available for {alias}. "
-                             "Try list_auth to get a list of available keys.")
+            raise ValueError(
+                f"No credentials available for {alias}. "
+                "Try list_auth to get a list of available keys."
+            )
         else:
             raise RuntimeError(f"Server returned {response.status_code}.")
 
