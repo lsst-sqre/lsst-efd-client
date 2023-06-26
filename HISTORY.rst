@@ -95,3 +95,17 @@ History
 -------------------
 
 * The auth helper can now use a path attribute to connect to an InfluxDB instance.
+
+0.13.0 (2023-06-26)
+-------------------
+
+* `EfdClient` now accepts non-UTC astropy.time.Time values (converting them, if necessary).
+* Fix unit tests:
+
+  * Update ``casettes/*.yaml`` to include "path" as a returned value.
+  * Change fixture ``efd_client`` to an async context manager ``make_efd_client`` and call it explicitly.
+  * Import ``vcr`` explicitly and configure it so that it fails if the specified cassette files cannot be found or used.
+    This avoids two sources of mysterious failures.
+  * Consolidate a few tests to make it clearer that they are testing the same thing, and to reduce the number of cassette files needed.
+
+* Run black and isort on the code.
