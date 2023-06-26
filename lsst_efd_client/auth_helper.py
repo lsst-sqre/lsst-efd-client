@@ -69,6 +69,7 @@ class NotebookAuth:
 
     def list_auth(self):
         """Return a list of possible credential aliases
+
         Returns
         -------
         aliases : `list`
