@@ -385,7 +385,7 @@ class EfdClient:
         Returns
         -------
         result : `pd.DataFrame`
-            A `pd.DataFrame` containing teh results of the query.
+            A `pd.DataFrame` containing the results of the query.
         """
 
         # The "GROUP BY" is necessary to return the tags

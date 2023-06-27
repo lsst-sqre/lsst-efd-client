@@ -21,7 +21,7 @@ class NotebookAuth:
     Raises
     ------
     RuntimeError
-        Raised if teh service returns a non-200 status code.
+        Raised if the service returns a non-200 status code.
     """
 
     def __init__(self, service_endpoint="https://roundtable.lsst.codes/segwarides/"):
