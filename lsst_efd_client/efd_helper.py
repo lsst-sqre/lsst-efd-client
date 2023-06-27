@@ -142,8 +142,8 @@ class EfdClient:
 
         Returns
         -------
-        results : `pandas.DataFrame`
-            Results of the query in a `pandas.DataFrame`.
+        results : `pd.DataFrame`
+            Results of the query in a `pd.DataFrame`.
         """
         self.query_history.append(query)
         result = await self.influx_client.query(query)
@@ -326,8 +326,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pandas.DataFrame`
-            A `pandas.DataFrame` containing the results of the query.
+        result : `pd.DataFrame`
+            A `pd.DataFrame` containing the results of the query.
         """
         query = self.build_time_range_query(
             topic_name,
@@ -384,8 +384,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pandas.DataFrame`
-            A `pandas.DataFrame` containing teh results of the query.
+        result : `pd.DataFrame`
+            A `pd.DataFrame` containing teh results of the query.
         """
 
         # The "GROUP BY" is necessary to return the tags
@@ -524,8 +524,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pandas.DataFrame`
-            A `pandas.DataFrame` containing the results of the query.
+        result : `pd.DataFrame`
+            A `pd.DataFrame` containing the results of the query.
         """
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):

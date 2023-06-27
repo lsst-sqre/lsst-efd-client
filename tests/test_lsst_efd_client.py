@@ -7,7 +7,7 @@ import json
 import pathlib
 
 import astropy.units as u
-import numpy
+import numpy as np
 import pandas as pd
 import pytest
 import vcr
@@ -301,7 +301,7 @@ async def test_time_series(start_stop, start_stop_old):
         t = Time(df.index).unix - Time(df_legacy.index).unix
         # The indexes should all be the same since both the time range
         # and index were shifted
-        assert numpy.all(t == 0.0)
+        assert np.all(t == 0.0)
         # But the queries should be different
         assert not efd_client.query_history[-2] == efd_client.query_history[-1]
         # Test indexed query
@@ -313,7 +313,7 @@ async def test_time_series(start_stop, start_stop_old):
             index=2,
         )
         assert len(df1) == 100
-        assert numpy.all(df1["eggs"] == 10)
+        assert np.all(df1["eggs"] == 10)
         # Old index should return similar sized dataframe
         df1 = await efd_client.select_time_series(
             "lsst.sal.barSubSys.test",
@@ -324,7 +324,7 @@ async def test_time_series(start_stop, start_stop_old):
             use_old_csc_indexing=True,
         )
         assert len(df1) == 100
-        assert numpy.all(df1["eggs"] == 10)
+        assert np.all(df1["eggs"] == 10)
         # Using new indexing across old time frame should return an empty
         # dataframe
         df1 = await efd_client.select_time_series(
@@ -363,7 +363,7 @@ async def test_top_n(start_stop):
         )
         # Test that df_legacy is in UTC assuming df was in TAI
         t = Time(df.index).unix - Time(df_legacy.index).unix
-        assert numpy.all(t == 37.0)
+        assert np.all(t == 37.0)
         df = await efd_client.select_top_n(
             "lsst.sal.fooSubSys.test", ["foo", "bar"], 10, time_cut=start_stop[0]
         )
@@ -389,9 +389,9 @@ async def test_packed_time_series(start_stop, test_query_res):
         )
         # The column 'times' holds the input to the packed time index.
         # It's typically in TAI, but the returned index should be in UTC
-        assert numpy.all((numpy.array(df["times"]) - Time(df.index).unix) == 37.0)
-        assert numpy.all((df.index[1:] - df.index[:-1]).total_seconds() > 0)
-        assert numpy.all(df == df_exp)
+        assert np.all((np.array(df["times"]) - Time(df.index).unix) == 37.0)
+        assert np.all((df.index[1:] - df.index[:-1]).total_seconds() > 0)
+        assert np.all(df == df_exp)
         for c in ["ham", "egg"]:
             assert c in df.columns
 
@@ -412,8 +412,8 @@ def test_rendezvous(test_df):
     merged = rendezvous_dataframes(test_df, sub)
     for i, rec in enumerate(merged.iterrows()):
         if i < 26:
-            assert numpy.isnan(rec[1]["ham0_y"])
-            assert numpy.isnan(rec[1]["egg0_y"])
+            assert np.isnan(rec[1]["ham0_y"])
+            assert np.isnan(rec[1]["egg0_y"])
         elif i > 25 and i < 76:
             assert rec[1]["ham0_y"] == sub["ham0"][0]
             assert rec[1]["egg0_y"] == sub["egg0"][0]
