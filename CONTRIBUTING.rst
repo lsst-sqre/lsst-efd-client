@@ -77,7 +77,7 @@ Ready to contribute? Here's how to set up `lsst-efd-client` for local developmen
    Now you can make your changes locally.
 
 5. When you're done making changes, check that your changes pass flake8 and the
-   tests.  This will include spinning up an influxDB server in a container.
+   tests. This will include spinning up an influxDB server in a container.
    Check the ``.travis.py`` file in the root of this repository to see which version
    to run.::
 
