@@ -109,3 +109,10 @@ History
   * Consolidate a few tests to make it clearer that they are testing the same thing, and to reduce the number of cassette files needed.
 
 * Run black and isort on the code.
+
+0.13.1 (2023-07-01)
+-------------------
+
+* numpy 1.25.0 breaks compatibility with aioinflux. 
+  Pin numpy to version 1.23.5
+
