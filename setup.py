@@ -11,7 +11,7 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 requirements = [
-    "numpy>=1.16.5",
+    "numpy==1.23.5",
     "aioinflux",
     "pandas",
     "astropy",
@@ -67,6 +67,6 @@ setup(
     tests_require=test_requirements,
     extras_require=extra_requirements,
     url="https://github.com/lsst-sqre/lsst-efd-client",
-    version="0.13.0",
+    version="0.13.1",
     zip_safe=False,
 )
