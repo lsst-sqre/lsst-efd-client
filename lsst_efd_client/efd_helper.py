@@ -1,5 +1,4 @@
-"""EFD client class
-"""
+"""EFD client."""
 
 from functools import partial
 from urllib.parse import urljoin
@@ -55,9 +54,14 @@ class EfdClient:
     ):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, schema_registry_url, port, user, password, path = self.auth.get_auth(
-            efd_name
-        )
+        (
+            host,
+            schema_registry_url,
+            port,
+            user,
+            password,
+            path,
+        ) = self.auth.get_auth(efd_name)
         self.schema_registry_url = schema_registry_url
         if client is None:
             health_url = urljoin(f"https://{host}:{port}", f"{path}health")
@@ -93,7 +97,9 @@ class EfdClient:
         EfdClient.subclasses[cls.deployment] = cls
 
     @classmethod
-    def list_efd_names(cls, creds_service="https://roundtable.lsst.codes/segwarides/"):
+    def list_efd_names(
+        cls, creds_service="https://roundtable.lsst.codes/segwarides/"
+    ):
         """List all valid names for EFD deployments available.
 
         Parameters
@@ -263,11 +269,16 @@ class EfdClient:
         if index:
             if use_old_csc_indexing:
                 parts = topic_name.split(".")
-                index_name = f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                index_name = (
+                    f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                )
             else:
                 index_name = "salIndex"
             index_str = f" AND {index_name} = {index}"
-        timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"  # influxdb demands last Z
+        timespan = (
+            # influxdb requires the time to be in UTC (Z)
+            f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"
+        )
 
         if isinstance(fields, str):
             fields = [
@@ -280,7 +291,10 @@ class EfdClient:
             ]
 
         # Build query here
-        return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
+        return (
+            f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen".'
+            f'"{topic_name}" WHERE {timespan}'
+        )
 
     async def select_time_series(
         self,
@@ -398,7 +412,9 @@ class EfdClient:
         if index:
             if use_old_csc_indexing:
                 parts = topic_name.split(".")
-                index_name = f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                index_name = (
+                    f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                )
             else:
                 index_name = "salIndex"
             # The CSC name is always the penultimate
@@ -419,7 +435,10 @@ class EfdClient:
             ]
 
         # Build query here
-        query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}"{pstr} {limit}'
+        query = (
+            f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen".'
+            f'"{topic_name}"{pstr} {limit}'
+        )
 
         # Do query
         ret = await self._do_query(query, convert_influx_index)
@@ -456,7 +475,8 @@ class EfdClient:
                 n = len(ret[bfield])
             if n != len(ret[bfield]):
                 raise ValueError(
-                    f"Field lengths do not agree for {bfield}: {n} vs. {len(ret[bfield])}"
+                    f"Field lengths do not agree for {bfield}: {n} vs. "
+                    f"{len(ret[bfield])}"
                 )
 
             def sorter(prefix, val):

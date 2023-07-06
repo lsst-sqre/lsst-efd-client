@@ -41,7 +41,10 @@ master_doc = "index"
 
 # General information about the project.
 project = "lsst-efd-client"
-copyright = "2020 " "Association of Universities for Research in Astronomy, Inc. (AURA)"
+copyright = (
+    "2020 "
+    "Association of Universities for Research in Astronomy, Inc. (AURA)"
+)
 author = "LSST Data Management"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -91,7 +94,10 @@ linkcheck_timeout = 15
 
 # -- Options for HTML output ----------------------------------------------
 
-templates_path = ["_templates", lsst_sphinx_bootstrap_theme.get_html_templates_path()]
+templates_path = [
+    "_templates",
+    lsst_sphinx_bootstrap_theme.get_html_templates_path(),
+]
 
 html_theme = "lsst_sphinx_bootstrap_theme"
 html_theme_path = [lsst_sphinx_bootstrap_theme.get_html_theme_path()]

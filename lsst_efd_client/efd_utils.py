@@ -1,5 +1,5 @@
-"""Free functions to help out with EFD operations.
-"""
+"""Free functions to help out with EFD operations."""
+
 import numpy as np
 import pandas as pd
 from astropy.time import Time
@@ -52,7 +52,8 @@ def merge_packed_time_series(
     npack = len(packed_fields)
     if npack % stride != 0:
         raise RuntimeError(
-            f"Stride must be a factor of the number of packed fields: {stride} v. {npack}"
+            "Stride must be a factor of the number of packed fields: "
+            f"{stride} v. {npack}"
         )
     packed_len = len(packed_dataframe)
     n_used = npack // stride  # number of raw fields being used
@@ -96,13 +97,19 @@ def resample(df1, df2, interp_type="time"):
         That is the length of the resulting `pd.DataFrame` is the
         sum of the lengths of the inputs.
     """
-    df = pd.concat([df1, df2], axis=1)  # Sort in this context does not sort the data
+    df = pd.concat(
+        [df1, df2], axis=1
+    )  # Sort in this context does not sort the data
     df = df.sort_index()
     return df.interpolate(type=interp_type)
 
 
 def rendezvous_dataframes(
-    left, right, direction="backward", tolerance=pd.Timedelta(days=20), **kwargs
+    left,
+    right,
+    direction="backward",
+    tolerance=pd.Timedelta(days=20),
+    **kwargs,
 ):
     """Extend each record in ``left`` with a corresponding record in "right",
     if one exists.
