@@ -31,36 +31,13 @@ This package also provides some useful utility functions for dealing with data r
 `rendezvous_dataframes`
    Given one `pandas.DataFrame`, find all entries in another `pandas.DataFrame` that are closest (default is nearest in the past).
 
-Follow the :doc:`getting-started` guide to start accessing EFD data.
+Follow the :doc:`user-guide/getting-started` guide to start accessing EFD data.
 Also, check out the `demo notebooks`_ for examples.
 
-.. _InfluxQL: https://docs.influxdata.com/influxdb/v1.7/query_language/
-.. _demo notebooks: https://github.com/lsst-sqre/system-test/tree/main/efd_examples
-.. _LSST Engineering Facility Database (EFD): https://sqr-034.lsst.io
-
-.. _user-guide:
-
-Using lsst_efd_client
-=====================
-
 .. toctree::
-   :maxdepth: 2
+   :hidden:
 
-   getting-started
+   user-guide/index
+   Python API <api>
    changelog
-
-.. _py-api:
-
-Python API reference
-====================
-
-.. automodapi:: lsst_efd_client
-   :no-inheritance-diagram:
-
-.. _dev-guide:
-
-Contributing
-============
-
-``lsst_efd_client`` is developed at https://github.com/lsst-sqre/lsst-efd-client.
-Please use GitHub issues in the project repository to report problems and contribute.
+   Development <dev/index>
