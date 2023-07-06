@@ -5,18 +5,28 @@ Getting started
 Installation
 ============
 
-First, ensure that the LSST EFD Client is installed in your environment.
-You can check this at a Python prompt:
+The LSST EFD Client is preinstalled in the ``rubin-env-rsp`` and ``rubin-env-developer`` Conda-Forge metapackages, which is the default Python environment for the `Rubin Science Platform`_.
+You can check if ``lsst_efd_client`` is available at a Python prompt:
 
 .. prompt:: python >>>
 
    import lsst_efd_client
 
-To install or upgrade the LSST EFD Client, use :command:`pip`:
+If not available, you can install with either Conda or pip:
 
-.. prompt:: bash
+.. tab-set::
 
-   pip install -U lsst-efd-client
+   .. tab-item:: pip
+
+      .. prompt:: bash
+
+         pip install lsst-efd-client
+
+   .. tab-item:: Conda
+
+      .. prompt:: bash
+
+         conda install -c conda-forge lsst-efd-client
 
 Next steps
 ==========

@@ -3,3 +3,4 @@
 .. _lsst-sqre/system-test repository:
 .. _demo notebooks: https://github.com/lsst-sqre/system-test/tree/main/efd_examples
 .. _LSST Engineering Facility Database (EFD): https://sqr-034.lsst.io
+.. _Rubin Science Platform: https://rsp.lsst.io
