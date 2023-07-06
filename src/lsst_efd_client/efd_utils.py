@@ -17,7 +17,7 @@ def merge_packed_time_series(
 
     Parameters
     ----------
-    packed_dataframe : `pd.DataFrame`
+    packed_dataframe : `pandas.DataFrame`
         packed data frame containing the desired data
     base_field :  `str`
         Base field name that will be expanded to query all
@@ -37,8 +37,8 @@ def merge_packed_time_series(
 
     Returns
     -------
-    result : `pd.DataFrame`
-        A `pd.DataFrame` containing the results of the query.
+    result : `pandas.DataFrame`
+        A `pandas.DataFrame` containing the results of the query.
     """
 
     packed_fields = [
@@ -83,18 +83,18 @@ def resample(df1, df2, interp_type="time"):
 
     Parameters
     ----------
-    df1 : `pd.DataFrame`
-        First `pd.DataFrame`.
-    df2 : `pd.DataFrame`
-        Second `pd.DataFrame`.
+    df1 : `pandas.DataFrame`
+        First `~pandas.DataFrame`.
+    df2 : `pandas.DataFrame`
+        Second `~pandas.DataFrame`.
     interp_type : `str`, optional
         Type of interpolation to perform (default is 'time').
 
     Returns
     -------
-    result : `pd.DataFrame`
+    result : `pandas.DataFrame`
         The resulting resampling is bi-directional.
-        That is the length of the resulting `pd.DataFrame` is the
+        That is the length of the resulting `~pandas.DataFrame` is the
         sum of the lengths of the inputs.
     """
     df = pd.concat(
@@ -120,18 +120,18 @@ def rendezvous_dataframes(
 
     Parameters
     ----------
-    left: `pd.DataFrame`
-        The `pd.DataFrame` to extend
-    right: `pd.DataFrame`
-        The `pd.DataFrame` to rendezvous with ``left``
+    left: `pandas.DataFrame`
+        The `~pandas.DataFrame` to extend
+    right: `pandas.DataFrame`
+        The `~pandas.DataFrame` to rendezvous with ``left``
     direction: `str`
         The direction to search for the nearest record. Default is
         ``backward``. The other options are ``forward`` and ``nearest``.
-    tolerance: `pd.Timedelta`
+    tolerance: `pandas.Timedelta`
         The to,e window to search for the matching record.
     kwargs: `dict`
         Additional keyword arguments will be forwarded to the
-        `pd.merge_asof` function.
+        `pandas.merge_asof` function.
     """
     return pd.merge_asof(
         left,

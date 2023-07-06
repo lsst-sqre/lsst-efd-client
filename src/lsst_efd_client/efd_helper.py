@@ -28,11 +28,12 @@ class EfdClient:
         URL to the service to retrieve credentials
         (``https://roundtable.lsst.codes/segwarides/`` by default).
     timeout : `int`, optional
-        Timeout in seconds for async requests (`aiohttp.client`). The default
-        timeout is 900 seconds.
+        Timeout in seconds for async requests (`aiohttp.ClientSession`). The
+        default timeout is 900 seconds.
     client : `object`, optional
-        An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
-        The intent is to be able to substitute a mocked client for testing.
+        An instance of a class that ducktypes as
+        `aioinflux.client.InfluxDBClient`. The intent is to be able to
+        substitute a mocked client for testing.
     """
 
     influx_client = None
@@ -127,7 +128,7 @@ class EfdClient:
 
         Raises
         ------
-        NotImpementedError
+        NotImplementedError
             Raised if there is no subclass corresponding to the name.
         """
         if efd_name not in self.subclasses:
@@ -148,8 +149,8 @@ class EfdClient:
 
         Returns
         -------
-        results : `pd.DataFrame`
-            Results of the query in a `pd.DataFrame`.
+        results : `pandas.DataFrame`
+            Results of the query in a `~pandas.DataFrame`.
         """
         self.query_history.append(query)
         result = await self.influx_client.query(query)
@@ -340,8 +341,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pd.DataFrame`
-            A `pd.DataFrame` containing the results of the query.
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
         """
         query = self.build_time_range_query(
             topic_name,
@@ -398,8 +399,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pd.DataFrame`
-            A `pd.DataFrame` containing the results of the query.
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
         """
 
         # The "GROUP BY" is necessary to return the tags
@@ -544,8 +545,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pd.DataFrame`
-            A `pd.DataFrame` containing the results of the query.
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
         """
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):
@@ -598,7 +599,7 @@ class EfdClient:
 
         Returns
         -------
-        result : `Pandas.DataFrame`
+        result : `pandas.DataFrame`
             A dataframe with the schema information for the topic.
             One row per field.
         """
