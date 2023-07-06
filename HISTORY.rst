@@ -89,7 +89,7 @@ History
 
 * Updates to API calls to handle SAL 7 change to indexed component ID field.
 * Add timeout option to the EFD client.
-  Set the `aiohttp.client` timeout when working with chunked queries. Set a default timeout of 900 seconds.
+  Set the ``aiohttp.ClientSession`` timeout when working with chunked queries. Set a default timeout of 900 seconds.
 
 0.12.0 (2022-07-27)
 -------------------
@@ -99,7 +99,7 @@ History
 0.13.0 (2023-06-26)
 -------------------
 
-* `EfdClient` now accepts non-UTC astropy.time.Time values (converting them, if necessary).
+* ``EfdClient`` now accepts non-UTC ``astropy.time.Time`` values (converting them, if necessary).
 * Fix unit tests:
 
   * Update ``casettes/*.yaml`` to include "path" as a returned value.

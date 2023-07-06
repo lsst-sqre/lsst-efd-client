@@ -21,7 +21,7 @@ To install or upgrade the LSST EFD Client, use :command:`pip`:
 Next steps
 ==========
 
-- See the example EFD notebooks in the `lsst-sqre/notebook-demo repository`_.
+- See the example EFD notebooks in the `lsst-sqre/system-test repository`_.
 - Refer to the :ref:`py-api`.
 
 Special Notes
@@ -39,4 +39,4 @@ However, the TTS EFD operates on a 30 day rotation, so the older indexing will p
 The summit, and by fiat the LDF replica, will convert to SAL 7 on July 6, 2022.
 Since neither database operates with a retention policy, two separate queries must be constructed in order to get data selected on an index spanning the above date.
 
-.. _lsst-sqre/notebook-demo repository: https://github.com/lsst-sqre/notebook-demo/tree/master/efd_examples
+.. _lsst-sqre/system-test repository: https://github.com/lsst-sqre/system-test/tree/main/efd_examples
