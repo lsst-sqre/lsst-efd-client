@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Tests for `lsst_efd_client` package."""
 
 import contextlib
