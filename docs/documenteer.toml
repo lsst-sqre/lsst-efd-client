@@ -14,3 +14,9 @@ aiohttp = "https://docs.aiohttp.org/en/stable/"
 aioinflux = "https://aioinflux.readthedocs.io/en/stable/"
 astropy = "http://docs.astropy.org/en/v5.1.x/"
 pandas = "https://pandas.pydata.org/pandas-docs/stable/"
+
+[sphinx.linkcheck]
+ignore = [
+    # Unavilable on initial build
+    "https://github.com/lsst-sqre/lsst-efd-client/blob/main/.github/workflows/ci.yaml"
+]
