@@ -1,5 +1,5 @@
-"""Free functions to help out with EFD operations.
-"""
+"""Free functions to help out with EFD operations."""
+
 import numpy as np
 import pandas as pd
 from astropy.time import Time
@@ -17,7 +17,7 @@ def merge_packed_time_series(
 
     Parameters
     ----------
-    packed_dataframe : `pd.DataFrame`
+    packed_dataframe : `pandas.DataFrame`
         packed data frame containing the desired data
     base_field :  `str`
         Base field name that will be expanded to query all
@@ -37,8 +37,8 @@ def merge_packed_time_series(
 
     Returns
     -------
-    result : `pd.DataFrame`
-        A `pd.DataFrame` containing the results of the query.
+    result : `pandas.DataFrame`
+        A `pandas.DataFrame` containing the results of the query.
     """
 
     packed_fields = [
@@ -52,7 +52,8 @@ def merge_packed_time_series(
     npack = len(packed_fields)
     if npack % stride != 0:
         raise RuntimeError(
-            f"Stride must be a factor of the number of packed fields: {stride} v. {npack}"
+            "Stride must be a factor of the number of packed fields: "
+            f"{stride} v. {npack}"
         )
     packed_len = len(packed_dataframe)
     n_used = npack // stride  # number of raw fields being used
@@ -82,27 +83,33 @@ def resample(df1, df2, interp_type="time"):
 
     Parameters
     ----------
-    df1 : `pd.DataFrame`
-        First `pd.DataFrame`.
-    df2 : `pd.DataFrame`
-        Second `pd.DataFrame`.
+    df1 : `pandas.DataFrame`
+        First `~pandas.DataFrame`.
+    df2 : `pandas.DataFrame`
+        Second `~pandas.DataFrame`.
     interp_type : `str`, optional
         Type of interpolation to perform (default is 'time').
 
     Returns
     -------
-    result : `pd.DataFrame`
+    result : `pandas.DataFrame`
         The resulting resampling is bi-directional.
-        That is the length of the resulting `pd.DataFrame` is the
+        That is the length of the resulting `~pandas.DataFrame` is the
         sum of the lengths of the inputs.
     """
-    df = pd.concat([df1, df2], axis=1)  # Sort in this context does not sort the data
+    df = pd.concat(
+        [df1, df2], axis=1
+    )  # Sort in this context does not sort the data
     df = df.sort_index()
     return df.interpolate(type=interp_type)
 
 
 def rendezvous_dataframes(
-    left, right, direction="backward", tolerance=pd.Timedelta(days=20), **kwargs
+    left,
+    right,
+    direction="backward",
+    tolerance=pd.Timedelta(days=20),
+    **kwargs,
 ):
     """Extend each record in ``left`` with a corresponding record in "right",
     if one exists.
@@ -113,18 +120,18 @@ def rendezvous_dataframes(
 
     Parameters
     ----------
-    left: `pd.DataFrame`
-        The `pd.DataFrame` to extend
-    right: `pd.DataFrame`
-        The `pd.DataFrame` to rendezvous with ``left``
+    left: `pandas.DataFrame`
+        The `~pandas.DataFrame` to extend
+    right: `pandas.DataFrame`
+        The `~pandas.DataFrame` to rendezvous with ``left``
     direction: `str`
         The direction to search for the nearest record. Default is
         ``backward``. The other options are ``forward`` and ``nearest``.
-    tolerance: `pd.Timedelta`
+    tolerance: `pandas.Timedelta`
         The to,e window to search for the matching record.
     kwargs: `dict`
         Additional keyword arguments will be forwarded to the
-        `pd.merge_asof` function.
+        `pandas.merge_asof` function.
     """
     return pd.merge_asof(
         left,

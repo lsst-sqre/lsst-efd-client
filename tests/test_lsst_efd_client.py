@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Tests for `lsst_efd_client` package."""
 
 import contextlib
@@ -15,7 +13,12 @@ from aioinflux import InfluxDBClient
 from astropy.time import Time, TimeDelta
 from kafkit.registry.sansio import MockRegistryApi
 
-from lsst_efd_client import EfdClient, NotebookAuth, rendezvous_dataframes, resample
+from lsst_efd_client import (
+    EfdClient,
+    NotebookAuth,
+    rendezvous_dataframes,
+    resample,
+)
 
 PATH = pathlib.Path(__file__).parent.absolute()
 
@@ -40,7 +43,9 @@ async def make_efd_client():
         await client.create_database()
         await client.write(df, measurement="lsst.sal.fooSubSys.test")
         await client.write(df1, measurement="lsst.sal.barSubSys.test")
-        efd_client = EfdClient("test_efd", db_name="client_test", client=client)
+        efd_client = EfdClient(
+            "test_efd", db_name="client_test", client=client
+        )
         # Monkey patch the client to point to an existing schema registry
         # Note this is only available if on the NCSA VPN
         efd_client.schema_registry = (
@@ -111,7 +116,9 @@ def test_efd_names():
     # the backend to something that doesn't
     # guarantee that
     auth_client = NotebookAuth()
-    assert set(list(EfdClient.list_efd_names())) == set(auth_client.list_auth())
+    assert set(list(EfdClient.list_efd_names())) == set(
+        auth_client.list_auth()
+    )
 
 
 @pytest.mark.asyncio
@@ -126,7 +133,10 @@ async def test_build_query(start_stop):
         assert qstr == expected_strs[0].strip()
         # Check passing a list of fields works
         qstr = efd_client.build_time_range_query(
-            "lsst.sal.fooSubSys.test", ["foo", "bar"], start_stop[0], start_stop[1]
+            "lsst.sal.fooSubSys.test",
+            ["foo", "bar"],
+            start_stop[0],
+            start_stop[1],
         )
         assert qstr == expected_strs[1].strip()
         # Check old indexed component fetching works
@@ -285,7 +295,10 @@ async def test_fields(test_df):
 async def test_time_series(start_stop, start_stop_old):
     async with make_efd_client() as efd_client:
         df = await efd_client.select_time_series(
-            "lsst.sal.fooSubSys.test", ["foo", "bar"], start_stop[0], start_stop[1]
+            "lsst.sal.fooSubSys.test",
+            ["foo", "bar"],
+            start_stop[0],
+            start_stop[1],
         )
         assert len(df) == 600
         for c in ["foo", "bar"]:
@@ -359,13 +372,19 @@ async def test_top_n(start_stop):
         for c in ["foo", "bar"]:
             assert c in df.columns
         df_legacy = await efd_client.select_top_n(
-            "lsst.sal.fooSubSys.test", ["foo", "bar"], 10, convert_influx_index=True
+            "lsst.sal.fooSubSys.test",
+            ["foo", "bar"],
+            10,
+            convert_influx_index=True,
         )
         # Test that df_legacy is in UTC assuming df was in TAI
         t = Time(df.index).unix - Time(df_legacy.index).unix
         assert np.all(t == 37.0)
         df = await efd_client.select_top_n(
-            "lsst.sal.fooSubSys.test", ["foo", "bar"], 10, time_cut=start_stop[0]
+            "lsst.sal.fooSubSys.test",
+            ["foo", "bar"],
+            10,
+            time_cut=start_stop[0],
         )
         assert len(df) == 10
         for c in ["foo", "bar"]:
@@ -399,7 +418,9 @@ async def test_packed_time_series(start_stop, test_query_res):
 def test_resample(test_query_res):
     df = test_query_res
     df_copy = df.copy()
-    df_copy.set_index(df_copy.index + pd.Timedelta(0.05, unit="s"), inplace=True)
+    df_copy.set_index(
+        df_copy.index + pd.Timedelta(0.05, unit="s"), inplace=True
+    )
     df_out = resample(df, df_copy)
     assert len(df_out) == 2 * len(df)
 

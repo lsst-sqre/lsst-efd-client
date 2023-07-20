@@ -1,5 +1,4 @@
-"""EFD client class
-"""
+"""EFD client."""
 
 from functools import partial
 from urllib.parse import urljoin
@@ -29,11 +28,12 @@ class EfdClient:
         URL to the service to retrieve credentials
         (``https://roundtable.lsst.codes/segwarides/`` by default).
     timeout : `int`, optional
-        Timeout in seconds for async requests (`aiohttp.client`). The default
-        timeout is 900 seconds.
+        Timeout in seconds for async requests (`aiohttp.ClientSession`). The
+        default timeout is 900 seconds.
     client : `object`, optional
-        An instance of a class that ducktypes as `aioinflux.InfluxDBClient`.
-        The intent is to be able to substitute a mocked client for testing.
+        An instance of a class that ducktypes as
+        `aioinflux.client.InfluxDBClient`. The intent is to be able to
+        substitute a mocked client for testing.
     """
 
     influx_client = None
@@ -55,9 +55,14 @@ class EfdClient:
     ):
         self.db_name = db_name
         self.auth = NotebookAuth(service_endpoint=creds_service)
-        host, schema_registry_url, port, user, password, path = self.auth.get_auth(
-            efd_name
-        )
+        (
+            host,
+            schema_registry_url,
+            port,
+            user,
+            password,
+            path,
+        ) = self.auth.get_auth(efd_name)
         self.schema_registry_url = schema_registry_url
         if client is None:
             health_url = urljoin(f"https://{host}:{port}", f"{path}health")
@@ -93,7 +98,9 @@ class EfdClient:
         EfdClient.subclasses[cls.deployment] = cls
 
     @classmethod
-    def list_efd_names(cls, creds_service="https://roundtable.lsst.codes/segwarides/"):
+    def list_efd_names(
+        cls, creds_service="https://roundtable.lsst.codes/segwarides/"
+    ):
         """List all valid names for EFD deployments available.
 
         Parameters
@@ -121,7 +128,7 @@ class EfdClient:
 
         Raises
         ------
-        NotImpementedError
+        NotImplementedError
             Raised if there is no subclass corresponding to the name.
         """
         if efd_name not in self.subclasses:
@@ -142,8 +149,8 @@ class EfdClient:
 
         Returns
         -------
-        results : `pd.DataFrame`
-            Results of the query in a `pd.DataFrame`.
+        results : `pandas.DataFrame`
+            Results of the query in a `~pandas.DataFrame`.
         """
         self.query_history.append(query)
         result = await self.influx_client.query(query)
@@ -263,11 +270,16 @@ class EfdClient:
         if index:
             if use_old_csc_indexing:
                 parts = topic_name.split(".")
-                index_name = f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                index_name = (
+                    f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                )
             else:
                 index_name = "salIndex"
             index_str = f" AND {index_name} = {index}"
-        timespan = f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"  # influxdb demands last Z
+        timespan = (
+            # influxdb requires the time to be in UTC (Z)
+            f"time >= '{start_str}Z' AND time <= '{end_str}Z'{index_str}"
+        )
 
         if isinstance(fields, str):
             fields = [
@@ -280,7 +292,10 @@ class EfdClient:
             ]
 
         # Build query here
-        return f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}" WHERE {timespan}'
+        return (
+            f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen".'
+            f'"{topic_name}" WHERE {timespan}'
+        )
 
     async def select_time_series(
         self,
@@ -326,8 +341,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pd.DataFrame`
-            A `pd.DataFrame` containing the results of the query.
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
         """
         query = self.build_time_range_query(
             topic_name,
@@ -384,8 +399,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pd.DataFrame`
-            A `pd.DataFrame` containing the results of the query.
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
         """
 
         # The "GROUP BY" is necessary to return the tags
@@ -398,7 +413,9 @@ class EfdClient:
         if index:
             if use_old_csc_indexing:
                 parts = topic_name.split(".")
-                index_name = f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                index_name = (
+                    f"{parts[-2]}ID"  # The CSC name is always the penultimate
+                )
             else:
                 index_name = "salIndex"
             # The CSC name is always the penultimate
@@ -419,7 +436,10 @@ class EfdClient:
             ]
 
         # Build query here
-        query = f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen"."{topic_name}"{pstr} {limit}'
+        query = (
+            f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen".'
+            f'"{topic_name}"{pstr} {limit}'
+        )
 
         # Do query
         ret = await self._do_query(query, convert_influx_index)
@@ -456,7 +476,8 @@ class EfdClient:
                 n = len(ret[bfield])
             if n != len(ret[bfield]):
                 raise ValueError(
-                    f"Field lengths do not agree for {bfield}: {n} vs. {len(ret[bfield])}"
+                    f"Field lengths do not agree for {bfield}: {n} vs. "
+                    f"{len(ret[bfield])}"
                 )
 
             def sorter(prefix, val):
@@ -524,8 +545,8 @@ class EfdClient:
 
         Returns
         -------
-        result : `pd.DataFrame`
-            A `pd.DataFrame` containing the results of the query.
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
         """
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):
@@ -578,7 +599,7 @@ class EfdClient:
 
         Returns
         -------
-        result : `Pandas.DataFrame`
+        result : `pandas.DataFrame`
             A dataframe with the schema information for the topic.
             One row per field.
         """

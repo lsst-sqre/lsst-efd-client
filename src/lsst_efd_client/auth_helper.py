@@ -24,7 +24,9 @@ class NotebookAuth:
         Raised if the service returns a non-200 status code.
     """
 
-    def __init__(self, service_endpoint="https://roundtable.lsst.codes/segwarides/"):
+    def __init__(
+        self, service_endpoint="https://roundtable.lsst.codes/segwarides/"
+    ):
         response = requests.get(service_endpoint)
         if response.status_code == 200:
             self.service_endpoint = service_endpoint
@@ -48,7 +50,9 @@ class NotebookAuth:
             A tuple containing the host name, schema registry, port,
             username, password and path.
         """
-        response = requests.get(urljoin(self.service_endpoint, f"creds/{alias}"))
+        response = requests.get(
+            urljoin(self.service_endpoint, f"creds/{alias}")
+        )
         if response.status_code == 200:
             data = response.json()
             return (
