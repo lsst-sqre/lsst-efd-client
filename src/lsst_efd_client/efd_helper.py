@@ -599,15 +599,12 @@ class EfdClient:
 
     async def _is_topic_valid(self, topic: str) -> bool:
         """Check if the specified topic is in the schema.
-        
         A topic is valid and returns ``True`` if it is in the cached list of
         topics. Any other case returns ``False``.
-        
         Parameters
         ----------
         topic : `str`
             The name of the topic to look for.
-            
         Returns
         -------
         is_valid : `bool`
