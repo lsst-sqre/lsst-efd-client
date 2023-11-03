@@ -424,7 +424,8 @@ async def test_non_existing_topic(start_stop):
                 "non.existing.topic",
                 ["ham", "egg", "hamegg"],
                 start_stop[0],
-                start_stop[1])
+                start_stop[1],
+            )
 
 
 def test_resample(test_query_res):
