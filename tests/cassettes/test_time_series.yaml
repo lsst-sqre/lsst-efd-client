@@ -3892,7 +3892,7 @@ interactions:
       User-Agent:
       - python-requests/2.25.1
     method: GET
-    uri: https://roundtable.lsst.codes/segwarides/
+    uri: https://sdfproxy.sdf.slac.stanford.edu:3128/segwarides/
   response:
     body:
       string: '{"_metadata": {"name": "segwarides", "version": "0.4.2", "description":
@@ -3924,7 +3924,7 @@ interactions:
       User-Agent:
       - python-requests/2.25.1
     method: GET
-    uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
+    uri: https://sdfproxy.sdf.slac.stanford.edu:3128/segwarides/creds/test_efd
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
@@ -4131,6 +4131,41 @@ interactions:
       chunked: 'false'
       db: client_test
       epoch: ns
+      q: SHOW MEASUREMENTS
+    headers: {}
+    method: POST
+    uri: http://localhost:8086/query
+  response:
+    body:
+      string: '{"results":[{"statement_id":0,"series":[{"name":"measurements","columns":["name"],"values":[["lsst.sal.barSubSys.test"],["lsst.sal.fooSubSys.test"]]}]}]}
+
+        '
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 01 Jun 2022 21:40:06 GMT
+      Request-Id:
+      - 675eae9d-e1f3-11ec-8149-0242ac110002
+      Transfer-Encoding:
+      - chunked
+      X-Influxdb-Build:
+      - OSS
+      X-Influxdb-Version:
+      - 1.7.6
+      X-Request-Id:
+      - 675eae9d-e1f3-11ec-8149-0242ac110002
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:8086/query
+- request:
+    body:
+      chunked: 'false'
+      db: client_test
+      epoch: ns
       q: SELECT eggs, ham FROM "client_test"."autogen"."lsst.sal.barSubSys.test" WHERE
         time >= '2020-01-28T23:07:19.000Z' AND time <= '2020-01-28T23:17:19.000Z'
         AND barSubSysID = 2
@@ -4159,6 +4194,41 @@ interactions:
       - 1.7.6
       X-Request-Id:
       - 9be9cee7-ec23-11ec-81c6-0242ac110002
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:8086/query
+- request:
+    body:
+      chunked: 'false'
+      db: client_test
+      epoch: ns
+      q: SHOW MEASUREMENTS
+    headers: {}
+    method: POST
+    uri: http://localhost:8086/query
+  response:
+    body:
+      string: '{"results":[{"statement_id":0,"series":[{"name":"measurements","columns":["name"],"values":[["lsst.sal.barSubSys.test"],["lsst.sal.fooSubSys.test"]]}]}]}
+
+        '
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 01 Jun 2022 21:40:06 GMT
+      Request-Id:
+      - 675eae9d-e1f3-11ec-8149-0242ac110002
+      Transfer-Encoding:
+      - chunked
+      X-Influxdb-Build:
+      - OSS
+      X-Influxdb-Version:
+      - 1.7.6
+      X-Request-Id:
+      - 675eae9d-e1f3-11ec-8149-0242ac110002
     status:
       code: 200
       message: OK
