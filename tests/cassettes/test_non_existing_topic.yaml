@@ -3892,7 +3892,7 @@ interactions:
       User-Agent:
       - python-requests/2.25.1
     method: GET
-    uri: https://sdfproxy.sdf.slac.stanford.edu:3128/segwarides/
+    uri: https://roundtable.lsst.codes/segwarides/
   response:
     body:
       string: '{"_metadata": {"name": "segwarides", "version": "0.4.2", "description":
@@ -3924,7 +3924,7 @@ interactions:
       User-Agent:
       - python-requests/2.25.1
     method: GET
-    uri: https://sdfproxy.sdf.slac.stanford.edu:3128/segwarides/creds/test_efd
+    uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
@@ -3991,7 +3991,7 @@ interactions:
       User-Agent:
       - python-requests/2.25.1
     method: GET
-    uri: https://sdfproxy.sdf.slac.stanford.edu:3128/segwarides/creds/test_efd
+    uri: https://roundtable.lsst.codes/segwarides/creds/test_efd
   response:
     body:
       string: '{"host": "foo.bar.baz.net", "username": "foo", "password": "bar", "schema_registry":
