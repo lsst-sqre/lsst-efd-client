@@ -346,8 +346,6 @@ class EfdClient:
         result : `pandas.DataFrame`
             A `~pandas.DataFrame` containing the results of the query.
         """
-        if not await self._is_topic_valid(topic_name):
-            raise ValueError(f"Topic {topic_name} not in EFD schema")
         query = self.build_time_range_query(
             topic_name,
             fields,
@@ -360,6 +358,9 @@ class EfdClient:
         )
         # Do query
         ret = await self._do_query(query, convert_influx_index)
+        if ret.empty and not await self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+
         return ret
 
     async def select_top_n(
@@ -406,9 +407,6 @@ class EfdClient:
         result : `pandas.DataFrame`
             A `~pandas.DataFrame` containing the results of the query.
         """
-        if not await self._is_topic_valid(topic_name):
-            raise ValueError(f"Topic {topic_name} not in EFD schema")
-
         # The "GROUP BY" is necessary to return the tags
         limit = f"GROUP BY * ORDER BY DESC LIMIT {num}"
 
@@ -449,6 +447,10 @@ class EfdClient:
 
         # Do query
         ret = await self._do_query(query, convert_influx_index)
+
+        if ret.empty and not await self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+
         return ret
 
     def _make_fields(self, fields, base_fields):
@@ -554,9 +556,6 @@ class EfdClient:
         result : `pandas.DataFrame`
             A `~pandas.DataFrame` containing the results of the query.
         """
-        if not await self._is_topic_valid(topic_name):
-            raise ValueError(f"Topic {topic_name} not in EFD schema")
-
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):
             base_fields = [
@@ -599,8 +598,9 @@ class EfdClient:
 
     async def _is_topic_valid(self, topic: str) -> bool:
         """Check if the specified topic is in the schema.
-        A topic is valid and returns ``True`` if it is in the cached list of
-        topics. Any other case returns ``False``.
+        A topic is valid and returns `True` if it is in the cached list of
+        topics. Any other case returns `False`.
+
         Parameters
         ----------
         topic : `str`
