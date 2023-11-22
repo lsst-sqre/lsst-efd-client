@@ -88,7 +88,6 @@ class EfdClient:
         else:
             self.influx_client = client
         self.query_history = []
-        self._topics = None  # type: Optional[List[str]]
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -610,9 +609,8 @@ class EfdClient:
         is_valid : `bool`
             A boolean indicating if the topic is valid.
         """
-        if self._topics is None:
-            self._topics = await self.get_topics()
-        if topic not in self._topics:
+        existing_topics = await self.get_topics()
+        if topic not in existing_topics:
             return False
         return True
 
