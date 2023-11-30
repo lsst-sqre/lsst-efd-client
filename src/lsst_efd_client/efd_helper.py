@@ -266,6 +266,7 @@ class EfdClient:
                 "The second time argument must be the time stamp for the end "
                 "or a time delta."
             )
+
         index_str = ""
         if index:
             if use_old_csc_indexing:
@@ -356,6 +357,9 @@ class EfdClient:
         )
         # Do query
         ret = await self._do_query(query, convert_influx_index)
+        if ret.empty and not await self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+
         return ret
 
     async def select_top_n(
@@ -402,7 +406,6 @@ class EfdClient:
         result : `pandas.DataFrame`
             A `~pandas.DataFrame` containing the results of the query.
         """
-
         # The "GROUP BY" is necessary to return the tags
         limit = f"GROUP BY * ORDER BY DESC LIMIT {num}"
 
@@ -443,6 +446,10 @@ class EfdClient:
 
         # Do query
         ret = await self._do_query(query, convert_influx_index)
+
+        if ret.empty and not await self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+
         return ret
 
     def _make_fields(self, fields, base_fields):
@@ -587,6 +594,25 @@ class EfdClient:
             vals[f] = df[f]
         vals.update({"times": df["times"]})
         return pd.DataFrame(vals, index=df.index)
+
+    async def _is_topic_valid(self, topic: str) -> bool:
+        """Check if the specified topic is in the schema.
+        A topic is valid and returns `True` if it is in the cached list of
+        topics. Any other case returns `False`.
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to look for.
+        Returns
+        -------
+        is_valid : `bool`
+            A boolean indicating if the topic is valid.
+        """
+        existing_topics = await self.get_topics()
+        if topic not in existing_topics:
+            return False
+        return True
 
     async def get_schema(self, topic):
         """Givent a topic, get a list of dictionaries describing the fields

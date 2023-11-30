@@ -415,6 +415,19 @@ async def test_packed_time_series(start_stop, test_query_res):
             assert c in df.columns
 
 
+@pytest.mark.asyncio
+@safe_vcr.use_cassette()
+async def test_non_existing_topic(start_stop):
+    async with make_efd_client() as efd_client:
+        with pytest.raises(ValueError):
+            await efd_client.select_time_series(
+                "non.existing.topic",
+                ["ham", "egg"],
+                start_stop[0],
+                start_stop[1],
+            )
+
+
 def test_resample(test_query_res):
     df = test_query_res
     df_copy = df.copy()
