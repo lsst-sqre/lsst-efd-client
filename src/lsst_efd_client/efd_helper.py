@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 import aiohttp
 import aioinflux
 import astropy.units as u
+import asyncio
 import pandas as pd
 import requests
 from astropy.time import Time, TimeDelta
@@ -17,6 +18,7 @@ from .efd_utils import merge_packed_time_series
 
 
 class ClientUtilsAbstract(ABC):
+    """Abstract class to handle connections and basic querying"""
 
     def __init__(self, client):
         super().__init__()
@@ -41,7 +43,7 @@ class ClientUtilsAbstract(ABC):
 
 
 class ClientAsyncUtils(ClientUtilsAbstract):
-    """Class to handle connections and basic queries asynchronously
+    """Class to handle connections and basic querying asynchronously
 
     Parameters
     ----------
@@ -96,12 +98,12 @@ class ClientSyncUtils(ClientUtilsAbstract):
         results : `pandas.DataFrame`
             Results of the query in a `~pandas.DataFrame`.
         """
-        self.query_history.append(query)
         result = self.influx_client.query(query)
         return self.result_handler(result, convert_influx_index=convert_influx_index)
 
 
 class EfdClientInterface(ABC):
+    """EfdClient Interface"""
 
     @abstractmethod
     def get_topics(self):
@@ -175,6 +177,7 @@ class EfdClientInterface(ABC):
 
 
 class EfdClientStatic:
+    """Static tools for EfdClient"""
 
     influx_client = None
     """The `aioinflux.client.InfluxDBClient` used for queries.
@@ -235,7 +238,6 @@ class EfdClientStatic:
 
 
 class EfdClientCommon(EfdClientInterface):
-
     """ Shared class for async and sync EfdClient to avoid duplication code
 
     Parameters
@@ -362,11 +364,9 @@ class EfdClientCommon(EfdClientInterface):
         results : `list`
             List of field names in specified topic.
         """
-        print(f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"')
         fields = await self.do_query(
             f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"'
         )
-        print(fields)
         return fields["fieldKey"].tolist()
 
     def build_time_range_query(
@@ -649,17 +649,12 @@ class EfdClientCommon(EfdClientInterface):
         """
         ret = {}
         n = None
-        print(fields)
-        print(base_fields)
         for bfield in base_fields:
             for f in fields:
-                print(f"{f.startswith(bfield)} {f[len(bfield) :].isdigit()} {f[len(bfield) :]} {f} {bfield}")
                 if (
                     f.startswith(bfield) and f[len(bfield) :].isdigit()
                 ):  # Check prefix is complete
-                    print(bfield)
                     ret.setdefault(bfield, []).append(f)
-            print(ret)
             if n is None:
                 n = len(ret[bfield])
             if n != len(ret[bfield]):
@@ -736,9 +731,7 @@ class EfdClientCommon(EfdClientInterface):
         result : `pandas.DataFrame`
             A `~pandas.DataFrame` containing the results of the query.
         """
-        print("*****************")
         fields = await self.get_fields(topic_name)
-        print(f"Fields: {fields}")
         if isinstance(base_fields, str):
             base_fields = [
                 base_fields,
@@ -832,12 +825,12 @@ class EfdClientCommon(EfdClientInterface):
             else:
                 vals["is_array"].append(False)
         return pd.DataFrame(vals)
-    
+
     def get_schema(self, topic):
         raise NotImplementedError()
 
 
-class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
+class EfdClientSync(EfdClientInterface, EfdClientStatic):
     """"""
     mode = 'sync'
 
@@ -856,6 +849,13 @@ class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
                                             timeout=900,
                                             client=None,)
 
+    @staticmethod
+    def _sync_call(func):
+        def wrapper(*args, **kwargs):            
+            return asyncio.run(func(*args, **kwargs))
+        return wrapper
+
+    @_sync_call
     def get_topics(self):
         """Query the list of possible topics.
 
@@ -866,6 +866,7 @@ class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
         """
         return self._efd_commons.get_topics()
 
+    @_sync_call
     def get_fields(self, topic_name):
         """Query the list of field names for a topic.
 
@@ -892,6 +893,7 @@ class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
         """
         return self._efd_commons.query_history
 
+    @_sync_call
     def build_time_range_query(
         self,
         topic_name,
@@ -948,6 +950,7 @@ class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
                                                         convert_influx_index,
                                                         use_old_csc_indexing)
 
+    @_sync_call
     def select_time_series(
         self,
         topic_name,
@@ -1005,6 +1008,7 @@ class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
                                                     use_old_csc_indexing,
                                                     )
 
+    @_sync_call
     def select_top_n(
         self,
         topic_name,
@@ -1057,6 +1061,7 @@ class EfdClientSynchronous(EfdClientInterface, EfdClientStatic):
                                               convert_influx_index,
                                               use_old_csc_indexing)
 
+    @_sync_call
     def select_packed_time_series(
         self,
         topic_name,
