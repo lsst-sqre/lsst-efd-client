@@ -5,7 +5,7 @@ The LSST EFD Client
 ###################
 
 The LSST EFD Client helps you access the `LSST Engineering Facility Database (EFD)`_, which is backed by InfluxDB.
-The client, `EfdClient` handles authentication and provides convenience methods for accessing data in ready-to-use formats:
+Two clients available `EfdClient` and `EfdClientSync`, offer a asynchronous and synchronous interface respectively, handling authentication and providing both convenience methods for accessing data in ready-to-use formats:
 
 `~EfdClient.get_topics`
     Get the topics in the EFD.

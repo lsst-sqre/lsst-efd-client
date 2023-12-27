@@ -1,5 +1,6 @@
 """EFD client."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from functools import partial
 from urllib.parse import urljoin
@@ -7,7 +8,7 @@ from urllib.parse import urljoin
 import aiohttp
 import aioinflux
 import astropy.units as u
-import asyncio
+import nest_asyncio
 import pandas as pd
 import requests
 from astropy.time import Time, TimeDelta
@@ -50,6 +51,7 @@ class ClientAsyncUtils(ClientUtilsAbstract):
     client : `object`, optional
         An instance of a class `aioinflux.client.InfluxDBClient`.
     """
+
     def __init__(self, client):
         super().__init__(client)
 
@@ -69,7 +71,9 @@ class ClientAsyncUtils(ClientUtilsAbstract):
             Results of the query in a `~pandas.DataFrame`.
         """
         result = await self.influx_client.query(query)
-        return self.result_handler(result, convert_influx_index=convert_influx_index)
+        return self.result_handler(
+            result, convert_influx_index=convert_influx_index
+        )
 
 
 class ClientSyncUtils(ClientUtilsAbstract):
@@ -80,6 +84,7 @@ class ClientSyncUtils(ClientUtilsAbstract):
     client : `object`, optional
         An instance of a class `aioinflux.client.InfluxDBClient`.
     """
+
     def __init__(self, client):
         super().__init__(client)
 
@@ -99,18 +104,39 @@ class ClientSyncUtils(ClientUtilsAbstract):
             Results of the query in a `~pandas.DataFrame`.
         """
         result = self.influx_client.query(query)
-        return self.result_handler(result, convert_influx_index=convert_influx_index)
+        return self.result_handler(
+            result, convert_influx_index=convert_influx_index
+        )
 
 
-class EfdClientInterface(ABC):
+class _EfdClientInterface(ABC):
     """EfdClient Interface"""
 
     @abstractmethod
     def get_topics(self):
+        """Query the list of possible topics.
+
+        Returns
+        -------
+        results : `list`
+            List of valid topics in the database.
+        """
         raise NotImplementedError()
 
     @abstractmethod
     def get_fields(self, topic_name):
+        """Query the list of field names for a topic.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query for field names.
+
+        Returns
+        -------
+        results : `list`
+            List of field names in specified topic.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -125,6 +151,42 @@ class EfdClientInterface(ABC):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
+        """Build a query based on a time range.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic for which to build a query.
+        fields :  `str` or `list`
+            Name of field(s) to query.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
+        index : `int`, optional
+            When index is used, add an 'AND salIndex = index' to the query.
+            (default is `None`).
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC? This is for legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
+
+        Returns
+        -------
+        query : `str`
+            A string containing the constructed query statement.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -139,6 +201,42 @@ class EfdClientInterface(ABC):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
+        """Select a time series for a set of topics in a single subsystem
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        fields :  `str` or `list`
+            Name of field(s) to query.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
+        index : `int`, optional
+            When index is used, add an 'AND salIndex = index' to the query.
+            (default is `None`).
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC? This is for legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -152,6 +250,40 @@ class EfdClientInterface(ABC):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
+        """Select the most recent N samples from a set of topics in a single
+        subsystem.
+
+        This method does not guarantee sort direction of the returned rows.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        fields : `str` or `list`
+            Name of field(s) to query.
+        num : `int`
+            Number of rows to return.
+        time_cut : `astropy.time.Time`, optional
+            Use a time cut instead of the most recent entry.
+            (default is `None`)
+        index : `int`, optional
+            When index is used, add an 'AND salIndex = index' to the query.
+            (default is `None`).
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC? This is for legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -169,14 +301,76 @@ class EfdClientInterface(ABC):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
+        """Select fields that are time samples and unpack them into a
+        dataframe.
+
+        Parameters
+        ----------
+        topic_name : `str`
+            Name of topic to query.
+        base_fields :  `str` or `list`
+            Base field name(s) that will be expanded to query all
+            vector entries.
+        start : `astropy.time.Time`
+            Start time of the time range, if ``is_window`` is specified,
+            this will be the midpoint of the range.
+        end : `astropy.time.Time` or `astropy.time.TimeDelta`
+            End time of the range either as an absolute time or
+            a time offset from the start time.
+        is_window : `bool`, optional
+            If set and the end time is specified as a
+            `~astropy.time.TimeDelta`, compute a range centered on the start
+            time (default is `False`).
+        index : `int`, optional
+            When index is used, add an 'AND salIndex = index' to the query.
+            (default is `None`).
+        ref_timestamp_col : `str`, optional
+            Name of the field name to use to assign timestamps to unpacked
+            vector fields (default is 'cRIO_timestamp').
+        ref_timestamp_fmt : `str`, optional
+            Format to use to translating ``ref_timestamp_col`` values
+            (default is 'unix_tai').
+        ref_timestamp_scale : `str`, optional
+            Time scale to use in translating ``ref_timestamp_col`` values
+            (default is 'tai').
+        convert_influx_index : `bool`, optional
+            Convert influxDB time index from TAI to UTC? This is for legacy
+            instances that may still have timestamps stored internally as TAI.
+            Modern instances all store index timestamps as UTC natively.
+            Default is `False`, don't translate from TAI to UTC.
+        use_old_csc_indexing: `bool`, optional
+            When index is used, add an 'AND {CSCName}ID = index' to the query
+            which is the old CSC indexing name.
+            (default is `False`).
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
+        """
         raise NotImplementedError()
 
     @abstractmethod
     def get_schema(self, topic):
+        """
+        Givent a topic, get a list of dictionaries describing the fields
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to query. A full list of valid topic names
+            can be obtained using ``get_schema_topics``.
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A dataframe with the schema information for the topic.
+            One row per field.
+        """
         raise NotImplementedError()
 
 
-class EfdClientStatic:
+class _EfdClientStatic:
     """Static tools for EfdClient"""
 
     influx_client = None
@@ -192,9 +386,9 @@ class EfdClientStatic:
     def __init_subclass__(cls, **kwargs):
         """Register subclasses with the abstract base class."""
         super().__init_subclass__(**kwargs)
-        if cls.mode in EfdClientStatic.subclasses:
+        if cls.mode in _EfdClientStatic.subclasses:
             raise ValueError(f"Class for mode, {cls.mode}, already defined")
-        EfdClientStatic.subclasses[cls.deployment] = cls
+        _EfdClientStatic.subclasses[cls.deployment] = cls
 
     @classmethod
     def list_efd_names(
@@ -237,8 +431,8 @@ class EfdClientStatic:
         return self.subclasses[efd_name](efd_name, *args, **kwargs)
 
 
-class EfdClientCommon(EfdClientInterface):
-    """ Shared class for async and sync EfdClient to avoid duplication code
+class EfdClientCommon(_EfdClientInterface):
+    """Shared class for async and sync EfdClient to avoid duplication code
 
     Parameters
     ----------
@@ -258,16 +452,20 @@ class EfdClientCommon(EfdClientInterface):
         substitute a mocked client for testing.
     """
 
-    _clients_available = {"async": ClientAsyncUtils, "blocking": ClientSyncUtils}
+    _clients_available = {
+        "async": ClientAsyncUtils,
+        "blocking": ClientSyncUtils,
+    }
 
     def __init__(
-            self,
-            efd_name,
-            mode,
-            db_name="efd",
-            creds_service="https://roundtable.lsst.codes/segwarides/",
-            timeout=900,
-            client=None,):
+        self,
+        efd_name,
+        mode,
+        db_name="efd",
+        creds_service="https://roundtable.lsst.codes/segwarides/",
+        timeout=900,
+        client=None,
+    ):
         self.db_name = db_name
         self._mode = mode
         self.auth = NotebookAuth(service_endpoint=creds_service)
@@ -337,33 +535,18 @@ class EfdClientCommon(EfdClientInterface):
         """
         self._query_history.append(query)
         if self._mode == "async":
-            return await self._client_utils.do_query(query, convert_influx_index=convert_influx_index)
-        return self._client_utils.do_query(query, convert_influx_index=convert_influx_index)
+            return await self._client_utils.do_query(
+                query, convert_influx_index=convert_influx_index
+            )
+        return self._client_utils.do_query(
+            query, convert_influx_index=convert_influx_index
+        )
 
     async def get_topics(self):
-        """Query the list of possible topics.
-
-            Returns
-        -------
-        results : `list`
-            List of valid topics in the database.
-        """
         topics = await self.do_query("SHOW MEASUREMENTS")
         return topics["name"].tolist()
 
     async def get_fields(self, topic_name):
-        """Query the list of field names for a topic.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query for field names.
-
-        Returns
-        -------
-        results : `list`
-            List of field names in specified topic.
-        """
         fields = await self.do_query(
             f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"'
         )
@@ -380,42 +563,6 @@ class EfdClientCommon(EfdClientInterface):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Build a query based on a time range.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic for which to build a query.
-        fields :  `str` or `list`
-            Name of field(s) to query.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        query : `str`
-            A string containing the constructed query statement.
-        """
         if not isinstance(start, Time):
             raise TypeError("The first time argument must be a time stamp")
 
@@ -487,51 +634,16 @@ class EfdClientCommon(EfdClientInterface):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select a time series for a set of topics in a single subsystem
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        fields :  `str` or `list`
-            Name of field(s) to query.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        query = self.build_time_range_query(topic_name,
-                                            fields,
-                                            start,
-                                            end,
-                                            is_window,
-                                            index,
-                                            convert_influx_index,
-                                            use_old_csc_indexing,
-                                            )
+        query = self.build_time_range_query(
+            topic_name,
+            fields,
+            start,
+            end,
+            is_window,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
         # Do query
         ret = await self.do_query(query, convert_influx_index)
         if ret.empty and not await self._is_topic_valid(topic_name):
@@ -548,43 +660,8 @@ class EfdClientCommon(EfdClientInterface):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select the most recent N samples from a set of topics in a single
-        subsystem.
-
-        This method does not guarantee sort direction of the returned rows.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        fields : `str` or `list`
-            Name of field(s) to query.
-        num : `int`
-            Number of rows to return.
-        time_cut : `astropy.time.Time`, optional
-            Use a time cut instead of the most recent entry.
-            (default is `None`)
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
         # The "GROUP BY" is necessary to return the tags
         limit = f"GROUP BY * ORDER BY DESC LIMIT {num}"
-
         # Deal with time cut and index
         pstr = ""
         if time_cut:
@@ -664,7 +741,7 @@ class EfdClientCommon(EfdClientInterface):
                 )
 
             def sorter(prefix, val):
-                return int(val[len(prefix):])
+                return int(val[len(prefix) :])
 
             part = partial(sorter, bfield)
             ret[bfield].sort(key=part)
@@ -684,53 +761,6 @@ class EfdClientCommon(EfdClientInterface):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select fields that are time samples and unpack them into a
-        dataframe.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        base_fields :  `str` or `list`
-            Base field name(s) that will be expanded to query all
-            vector entries.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        ref_timestamp_col : `str`, optional
-            Name of the field name to use to assign timestamps to unpacked
-            vector fields (default is 'cRIO_timestamp').
-        ref_timestamp_fmt : `str`, optional
-            Format to use to translating ``ref_timestamp_col`` values
-            (default is 'unix_tai').
-        ref_timestamp_scale : `str`, optional
-            Time scale to use in translating ``ref_timestamp_col`` values
-            (default is 'tai').
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
         fields = await self.get_fields(topic_name)
         if isinstance(base_fields, str):
             base_fields = [
@@ -747,8 +777,8 @@ class EfdClientCommon(EfdClientInterface):
             field_list += qfields[k]
         result = await self.select_time_series(
             topic_name,
-            field_list +
-            [
+            field_list
+            + [
                 ref_timestamp_col,
             ],
             start,
@@ -811,8 +841,8 @@ class EfdClientCommon(EfdClientInterface):
                 vals["units"].append(f["units"])
                 # Special case not having units
                 if (
-                    vals["units"][-1] == "unitless" or
-                    vals["units"][-1] == "dimensionless"
+                    vals["units"][-1] == "unitless"
+                    or vals["units"][-1] == "dimensionless"
                 ):
                     vals["aunits"].append(u.dimensionless_unscaled)
                 else:
@@ -826,13 +856,42 @@ class EfdClientCommon(EfdClientInterface):
                 vals["is_array"].append(False)
         return pd.DataFrame(vals)
 
-    def get_schema(self, topic):
-        raise NotImplementedError()
+    async def get_schema(self, topic):
+        async with aiohttp.ClientSession() as http_session:
+            registry_api = RegistryApi(
+                session=http_session, url=self.schema_registry_url
+            )
+            if self.mode == "async":
+                schema = await registry_api.get_schema_by_subject(
+                    f"{topic}-value"
+                )
+            else:
+                schema = registry_api.get_schema_by_subject(f"{topic}-value")
+            return self.parse_schema(topic, schema)
 
 
-class EfdClientSync(EfdClientInterface, EfdClientStatic):
-    """"""
-    mode = 'sync'
+class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
+    """Class to handle connections and basic queries synchronously
+
+    Parameters
+    ----------
+    efd_name : `str`
+        Name of the EFD instance for which to retrieve credentials.
+    db_name : `str`, optional
+        Name of the database within influxDB to query ('efd' by default).
+    creds_service : `str`, optional
+        URL to the service to retrieve credentials
+        (``https://roundtable.lsst.codes/segwarides/`` by default).
+    timeout : `int`, optional
+        Timeout in seconds for async requests (`aiohttp.ClientSession`). The
+        default timeout is 900 seconds.
+    client : `object`, optional
+        An instance of a class that ducktypes as
+        `aioinflux.client.InfluxDBClient`. The intent is to be able to
+        substitute a mocked client for testing.
+    """
+
+    mode = "blocking"
 
     def __init__(
         self,
@@ -842,44 +901,34 @@ class EfdClientSync(EfdClientInterface, EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._efd_commons = EfdClientCommon(efd_name,
-                                            mode="blocking",
-                                            db_name="efd",
-                                            creds_service="https://roundtable.lsst.codes/segwarides/",
-                                            timeout=900,
-                                            client=None,)
+        nest_asyncio.apply()
+        self._efd_commons = EfdClientCommon(
+            efd_name,
+            "blocking",
+            db_name,
+            creds_service,
+            timeout,
+            client,
+        )
 
     @staticmethod
     def _sync_call(func):
-        def wrapper(*args, **kwargs):            
-            return asyncio.run(func(*args, **kwargs))
+        def wrapper(*args, **kwargs):
+            if not asyncio.get_event_loop().is_running():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            else:
+                loop = asyncio.get_event_loop()
+            return loop.run_until_complete(func(*args, **kwargs))
+
         return wrapper
 
     @_sync_call
     def get_topics(self):
-        """Query the list of possible topics.
-
-        Returns
-        -------
-        results : `list`
-            List of valid topics in the database.
-        """
         return self._efd_commons.get_topics()
 
     @_sync_call
     def get_fields(self, topic_name):
-        """Query the list of field names for a topic.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query for field names.
-
-        Returns
-        -------
-        results : `list`
-            List of field names in specified topic.
-        """
         return self._efd_commons.get_fields(topic_name)
 
     @property
@@ -905,50 +954,16 @@ class EfdClientSync(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Build a query based on a time range.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic for which to build a query.
-        fields :  `str` or `list`
-            Name of field(s) to query.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        query : `str`
-            A string containing the constructed query statement.
-        """
-        return self._efd_commons.build_time_range_query(topic_name,
-                                                        fields,
-                                                        start,
-                                                        end,
-                                                        is_window,
-                                                        index,
-                                                        convert_influx_index,
-                                                        use_old_csc_indexing)
+        return self._efd_commons.build_time_range_query(
+            topic_name,
+            fields,
+            start,
+            end,
+            is_window,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     @_sync_call
     def select_time_series(
@@ -962,51 +977,16 @@ class EfdClientSync(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select a time series for a set of topics in a single subsystem
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        fields :  `str` or `list`
-            Name of field(s) to query.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        return self._efd_commons.select_time_series(topic_name,
-                                                    fields,
-                                                    start,
-                                                    end,
-                                                    is_window,
-                                                    index,
-                                                    convert_influx_index,
-                                                    use_old_csc_indexing,
-                                                    )
+        return self._efd_commons.select_time_series(
+            topic_name,
+            fields,
+            start,
+            end,
+            is_window,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     @_sync_call
     def select_top_n(
@@ -1019,47 +999,15 @@ class EfdClientSync(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select the most recent N samples from a set of topics in a single
-        subsystem.
-
-        This method does not guarantee sort direction of the returned rows.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        fields : `str` or `list`
-            Name of field(s) to query.
-        num : `int`
-            Number of rows to return.
-        time_cut : `astropy.time.Time`, optional
-            Use a time cut instead of the most recent entry.
-            (default is `None`)
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        return self._efd_commons.select_top_n(topic_name,
-                                              fields,
-                                              num,
-                                              time_cut,
-                                              index,
-                                              convert_influx_index,
-                                              use_old_csc_indexing)
+        return self._efd_commons.select_top_n(
+            topic_name,
+            fields,
+            num,
+            time_cut,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     @_sync_call
     def select_packed_time_series(
@@ -1076,89 +1024,26 @@ class EfdClientSync(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select fields that are time samples and unpack them into a
-        dataframe.
+        return self._efd_commons.select_packed_time_series(
+            topic_name,
+            base_fields,
+            start,
+            end,
+            is_window,
+            index,
+            ref_timestamp_col,
+            ref_timestamp_fmt,
+            ref_timestamp_scale,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        base_fields :  `str` or `list`
-            Base field name(s) that will be expanded to query all
-            vector entries.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        ref_timestamp_col : `str`, optional
-            Name of the field name to use to assign timestamps to unpacked
-            vector fields (default is 'cRIO_timestamp').
-        ref_timestamp_fmt : `str`, optional
-            Format to use to translating ``ref_timestamp_col`` values
-            (default is 'unix_tai').
-        ref_timestamp_scale : `str`, optional
-            Time scale to use in translating ``ref_timestamp_col`` values
-            (default is 'tai').
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        return self._efd_commons.select_packed_time_series(topic_name,
-                                                           base_fields,
-                                                           start,
-                                                           end,
-                                                           is_window,
-                                                           index,
-                                                           ref_timestamp_col,
-                                                           ref_timestamp_fmt,
-                                                           ref_timestamp_scale,
-                                                           convert_influx_index,
-                                                           use_old_csc_indexing)
-
+    @_sync_call
     def get_schema(self, topic):
-        """Givent a topic, get a list of dictionaries describing the fields
-
-        Parameters
-        ----------
-        topic : `str`
-            The name of the topic to query. A full list of valid topic names
-            can be obtained using ``get_schema_topics``.
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A dataframe with the schema information for the topic.
-            One row per field.
-        """
-        with aiohttp.ClientSession() as http_session:
-            registry_api = RegistryApi(
-                session=http_session, url=self.schema_registry_url
-            )
-            schema = registry_api.get_schema_by_subject(f"{topic}-value")
-            return self._efd_commons.parse_schema(topic, schema)
+        return self._efd_commons.get_schema(self, topic)
 
 
-class EfdClient(EfdClientInterface, EfdClientStatic):
+class EfdClient(_EfdClientInterface, _EfdClientStatic):
     """Class to handle connections and basic queries asynchronously
 
     Parameters
@@ -1179,7 +1064,7 @@ class EfdClient(EfdClientInterface, EfdClientStatic):
         substitute a mocked client for testing.
     """
 
-    mode = 'async'
+    mode = "async"
 
     def __init__(
         self,
@@ -1189,36 +1074,19 @@ class EfdClient(EfdClientInterface, EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._efd_commons = EfdClientCommon(efd_name,
-                                            mode="async",
-                                            db_name="efd",
-                                            creds_service="https://roundtable.lsst.codes/segwarides/",
-                                            timeout=900,
-                                            client=None,)
+        self._efd_commons = EfdClientCommon(
+            efd_name,
+            "async",
+            db_name,
+            creds_service,
+            timeout,
+            client,
+        )
 
     async def get_topics(self):
-        """Query the list of possible topics.
-
-        Returns
-        -------
-        results : `list`
-            List of valid topics in the database.
-        """
         return await self._efd_commons.get_topics()
 
     async def get_fields(self, topic_name):
-        """Query the list of field names for a topic.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query for field names.
-
-        Returns
-        -------
-        results : `list`
-            List of field names in specified topic.
-        """
         return await self._efd_commons.get_fields(topic_name)
 
     @property
@@ -1243,50 +1111,16 @@ class EfdClient(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Build a query based on a time range.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic for which to build a query.
-        fields :  `str` or `list`
-            Name of field(s) to query.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        query : `str`
-            A string containing the constructed query statement.
-        """
-        return self._efd_commons.build_time_range_query(topic_name,
-                                                        fields,
-                                                        start,
-                                                        end,
-                                                        is_window,
-                                                        index,
-                                                        convert_influx_index,
-                                                        use_old_csc_indexing)
+        return self._efd_commons.build_time_range_query(
+            topic_name,
+            fields,
+            start,
+            end,
+            is_window,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     async def select_time_series(
         self,
@@ -1299,51 +1133,16 @@ class EfdClient(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select a time series for a set of topics in a single subsystem
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        fields :  `str` or `list`
-            Name of field(s) to query.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        return await self._efd_commons.select_time_series(topic_name,
-                                                          fields,
-                                                          start,
-                                                          end,
-                                                          is_window,
-                                                          index,
-                                                          convert_influx_index,
-                                                          use_old_csc_indexing,
-                                                          )
+        return await self._efd_commons.select_time_series(
+            topic_name,
+            fields,
+            start,
+            end,
+            is_window,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     async def select_top_n(
         self,
@@ -1355,47 +1154,15 @@ class EfdClient(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select the most recent N samples from a set of topics in a single
-        subsystem.
-
-        This method does not guarantee sort direction of the returned rows.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        fields : `str` or `list`
-            Name of field(s) to query.
-        num : `int`
-            Number of rows to return.
-        time_cut : `astropy.time.Time`, optional
-            Use a time cut instead of the most recent entry.
-            (default is `None`)
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        return await self._efd_commons.select_top_n(topic_name,
-                                                    fields,
-                                                    num,
-                                                    time_cut,
-                                                    index,
-                                                    convert_influx_index,
-                                                    use_old_csc_indexing)
+        return await self._efd_commons.select_top_n(
+            topic_name,
+            fields,
+            num,
+            time_cut,
+            index,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     async def select_packed_time_series(
         self,
@@ -1411,83 +1178,19 @@ class EfdClient(EfdClientInterface, EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        """Select fields that are time samples and unpack them into a
-        dataframe.
-
-        Parameters
-        ----------
-        topic_name : `str`
-            Name of topic to query.
-        base_fields :  `str` or `list`
-            Base field name(s) that will be expanded to query all
-            vector entries.
-        start : `astropy.time.Time`
-            Start time of the time range, if ``is_window`` is specified,
-            this will be the midpoint of the range.
-        end : `astropy.time.Time` or `astropy.time.TimeDelta`
-            End time of the range either as an absolute time or
-            a time offset from the start time.
-        is_window : `bool`, optional
-            If set and the end time is specified as a
-            `~astropy.time.TimeDelta`, compute a range centered on the start
-            time (default is `False`).
-        index : `int`, optional
-            When index is used, add an 'AND salIndex = index' to the query.
-            (default is `None`).
-        ref_timestamp_col : `str`, optional
-            Name of the field name to use to assign timestamps to unpacked
-            vector fields (default is 'cRIO_timestamp').
-        ref_timestamp_fmt : `str`, optional
-            Format to use to translating ``ref_timestamp_col`` values
-            (default is 'unix_tai').
-        ref_timestamp_scale : `str`, optional
-            Time scale to use in translating ``ref_timestamp_col`` values
-            (default is 'tai').
-        convert_influx_index : `bool`, optional
-            Convert influxDB time index from TAI to UTC? This is for legacy
-            instances that may still have timestamps stored internally as TAI.
-            Modern instances all store index timestamps as UTC natively.
-            Default is `False`, don't translate from TAI to UTC.
-        use_old_csc_indexing: `bool`, optional
-            When index is used, add an 'AND {CSCName}ID = index' to the query
-            which is the old CSC indexing name.
-            (default is `False`).
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A `~pandas.DataFrame` containing the results of the query.
-        """
-        return await self._efd_commons.select_packed_time_series(topic_name,
-                                                                 base_fields,
-                                                                 start,
-                                                                 end,
-                                                                 is_window,
-                                                                 index,
-                                                                 ref_timestamp_col,
-                                                                 ref_timestamp_fmt,
-                                                                 ref_timestamp_scale,
-                                                                 convert_influx_index,
-                                                                 use_old_csc_indexing)
+        return await self._efd_commons.select_packed_time_series(
+            topic_name,
+            base_fields,
+            start,
+            end,
+            is_window,
+            index,
+            ref_timestamp_col,
+            ref_timestamp_fmt,
+            ref_timestamp_scale,
+            convert_influx_index,
+            use_old_csc_indexing,
+        )
 
     async def get_schema(self, topic):
-        """Givent a topic, get a list of dictionaries describing the fields
-
-        Parameters
-        ----------
-        topic : `str`
-            The name of the topic to query. A full list of valid topic names
-            can be obtained using ``get_schema_topics``.
-
-        Returns
-        -------
-        result : `pandas.DataFrame`
-            A dataframe with the schema information for the topic.
-            One row per field.
-        """
-        async with aiohttp.ClientSession() as http_session:
-            registry_api = RegistryApi(
-                session=http_session, url=self.schema_registry_url
-            )
-            schema = await registry_api.get_schema_by_subject(f"{topic}-value")
-            return self._efd_commons.parse_schema(topic, schema)
+        return self._efd_commons.get_schema(self, topic)

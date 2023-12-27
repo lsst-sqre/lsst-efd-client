@@ -29,6 +29,7 @@ dependencies = [
     "pyyaml",
     "tables",
     "kafkit",
+    "nest_asyncio"
 ]
 dynamic = ["version"]
 
