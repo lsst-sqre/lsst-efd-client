@@ -4,11 +4,11 @@ import asyncio
 from abc import ABC, abstractmethod
 from functools import partial
 from urllib.parse import urljoin
+from functools import wraps
 
 import aiohttp
 import aioinflux
 import astropy.units as u
-import nest_asyncio
 import pandas as pd
 import requests
 from astropy.time import Time, TimeDelta
@@ -16,6 +16,17 @@ from kafkit.registry.aiohttp import RegistryApi
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
+
+
+def runner(coro):
+    """Function execution decorator."""
+
+    @wraps(coro)
+    def inner(self, *args, **kwargs):
+        if self.mode == 'async':
+            return coro(self, *args, **kwargs)
+        return self._loop.run_until_complete(coro(self, *args, **kwargs))
+    return inner
 
 
 class ClientUtilsAbstract(ABC):
@@ -465,9 +476,12 @@ class EfdClientCommon(_EfdClientInterface):
         creds_service="https://roundtable.lsst.codes/segwarides/",
         timeout=900,
         client=None,
+        loop=None,
+
     ):
         self.db_name = db_name
         self._mode = mode
+        self._loop = loop or asyncio.get_event_loop()
         self.auth = NotebookAuth(service_endpoint=creds_service)
         (
             host,
@@ -508,6 +522,11 @@ class EfdClientCommon(_EfdClientInterface):
         self._query_history = []
 
     @property
+    def mode(self):
+        """"""
+        return self._mode
+
+    @property
     def query_history(self):
         """Return query history
 
@@ -546,6 +565,7 @@ class EfdClientCommon(_EfdClientInterface):
         topics = await self.do_query("SHOW MEASUREMENTS")
         return topics["name"].tolist()
 
+    @runner
     async def get_fields(self, topic_name):
         fields = await self.do_query(
             f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"'
@@ -729,7 +749,7 @@ class EfdClientCommon(_EfdClientInterface):
         for bfield in base_fields:
             for f in fields:
                 if (
-                    f.startswith(bfield) and f[len(bfield) :].isdigit()
+                    f.startswith(bfield) and f[len(bfield):].isdigit()
                 ):  # Check prefix is complete
                     ret.setdefault(bfield, []).append(f)
             if n is None:
@@ -741,7 +761,7 @@ class EfdClientCommon(_EfdClientInterface):
                 )
 
             def sorter(prefix, val):
-                return int(val[len(prefix) :])
+                return int(val[len(prefix):])
 
             part = partial(sorter, bfield)
             ret[bfield].sort(key=part)
@@ -777,8 +797,8 @@ class EfdClientCommon(_EfdClientInterface):
             field_list += qfields[k]
         result = await self.select_time_series(
             topic_name,
-            field_list
-            + [
+            field_list +
+            [
                 ref_timestamp_col,
             ],
             start,
@@ -841,8 +861,8 @@ class EfdClientCommon(_EfdClientInterface):
                 vals["units"].append(f["units"])
                 # Special case not having units
                 if (
-                    vals["units"][-1] == "unitless"
-                    or vals["units"][-1] == "dimensionless"
+                    vals["units"][-1] == "unitless" or
+                    vals["units"][-1] == "dimensionless"
                 ):
                     vals["aunits"].append(u.dimensionless_unscaled)
                 else:
@@ -901,7 +921,6 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        nest_asyncio.apply()
         self._efd_commons = EfdClientCommon(
             efd_name,
             "blocking",
@@ -911,23 +930,9 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             client,
         )
 
-    @staticmethod
-    def _sync_call(func):
-        def wrapper(*args, **kwargs):
-            if not asyncio.get_event_loop().is_running():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            else:
-                loop = asyncio.get_event_loop()
-            return loop.run_until_complete(func(*args, **kwargs))
-
-        return wrapper
-
-    @_sync_call
     def get_topics(self):
         return self._efd_commons.get_topics()
 
-    @_sync_call
     def get_fields(self, topic_name):
         return self._efd_commons.get_fields(topic_name)
 
@@ -942,7 +947,6 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         """
         return self._efd_commons.query_history
 
-    @_sync_call
     def build_time_range_query(
         self,
         topic_name,
@@ -965,7 +969,6 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             use_old_csc_indexing,
         )
 
-    @_sync_call
     def select_time_series(
         self,
         topic_name,
@@ -988,7 +991,6 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             use_old_csc_indexing,
         )
 
-    @_sync_call
     def select_top_n(
         self,
         topic_name,
@@ -1009,7 +1011,6 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             use_old_csc_indexing,
         )
 
-    @_sync_call
     def select_packed_time_series(
         self,
         topic_name,
@@ -1038,7 +1039,6 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             use_old_csc_indexing,
         )
 
-    @_sync_call
     def get_schema(self, topic):
         return self._efd_commons.get_schema(self, topic)
 
