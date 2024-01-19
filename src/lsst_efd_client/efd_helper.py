@@ -1,10 +1,9 @@
 """EFD client."""
 
-import asyncio
 from abc import ABC, abstractmethod
 from functools import partial
 from urllib.parse import urljoin
-from functools import wraps
+from enum import Enum
 
 import aiohttp
 import aioinflux
@@ -18,29 +17,38 @@ from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
 
 
-def runner(coro):
-    """Function execution decorator."""
-
-    @wraps(coro)
-    def inner(self, *args, **kwargs):
-        if self.mode == 'async':
-            return coro(self, *args, **kwargs)
-        return self._loop.run_until_complete(coro(self, *args, **kwargs))
-    return inner
+class ClientMode(Enum):
+    ASYNC = "async"
+    SYNC = "blocking"
 
 
-class ClientUtilsAbstract(ABC):
+class InfluxConnection(ABC):
     """Abstract class to handle connections and basic querying"""
 
-    def __init__(self, client):
+    def __init__(self, client, auth, db_name, schema_registry_url):
         super().__init__()
-        self._influx_client = client
+        self._client = client
+        self._auth = auth
+        self._db_name = db_name
+        self._schema_registry_url = schema_registry_url
+        self._query_history = []
+
+    @staticmethod
+    def create_client(client, mode, auth, db_name, schema_registry_url):
+        """
+        """
+        if mode == ClientMode.ASYNC:
+            return InfluxAsyncConnection(client, auth, db_name, schema_registry_url)
+        elif mode == ClientMode.SYNC:
+            return InfluxSyncConnection(client, auth, db_name, schema_registry_url)
+        raise Exception(f"Non recognized client {mode.value}")
 
     @abstractmethod
     def do_query(self, query, convert_influx_index=False):
         raise NotImplementedError()
 
-    def result_handler(self, result, convert_influx_index=False):
+    @staticmethod
+    def result_handler(result, convert_influx_index=False):
         if not isinstance(result, pd.DataFrame) and not result:
             # aioinflux returns an empty dict for an empty query
             result = pd.DataFrame()
@@ -49,12 +57,31 @@ class ClientUtilsAbstract(ABC):
             result = result.set_index(times.utc.datetime)
         return result
 
+    def save_query_to_history(self, query: str):
+        self._query_history.append(query)
+
     @property
     def influx_client(self):
-        return self._influx_client
+        return self._client
+
+    @property
+    def auth(self):
+        return self._auth
+
+    @property
+    def db_name(self):
+        return self._db_name
+
+    @property
+    def schema_registry_url(self):
+        return self._schema_registry_url
+
+    @property
+    def query_history(self):
+        return self._query_history
 
 
-class ClientAsyncUtils(ClientUtilsAbstract):
+class InfluxAsyncConnection(InfluxConnection):
     """Class to handle connections and basic querying asynchronously
 
     Parameters
@@ -63,10 +90,10 @@ class ClientAsyncUtils(ClientUtilsAbstract):
         An instance of a class `aioinflux.client.InfluxDBClient`.
     """
 
-    def __init__(self, client):
-        super().__init__(client)
+    def __init__(self, influx_client, auth, db_name, schema_registry_url):
+        super().__init__(influx_client, auth, db_name, schema_registry_url)
 
-    async def do_query(self, query, convert_influx_index=False):
+    async def do_query(self, query: str, convert_influx_index=False):
         """Query the influxDB and return results
 
         Parameters
@@ -81,13 +108,14 @@ class ClientAsyncUtils(ClientUtilsAbstract):
         results : `pandas.DataFrame`
             Results of the query in a `~pandas.DataFrame`.
         """
+        self.save_query_to_history(query)
         result = await self.influx_client.query(query)
         return self.result_handler(
             result, convert_influx_index=convert_influx_index
         )
 
 
-class ClientSyncUtils(ClientUtilsAbstract):
+class InfluxSyncConnection(InfluxConnection):
     """Class to handle connections and basic queries synchronously
 
     Parameters
@@ -96,10 +124,10 @@ class ClientSyncUtils(ClientUtilsAbstract):
         An instance of a class `aioinflux.client.InfluxDBClient`.
     """
 
-    def __init__(self, client):
-        super().__init__(client)
+    def __init__(self, influx_client, auth, db_name, schema_registry_url):
+        super().__init__(influx_client, auth, db_name, schema_registry_url)
 
-    def do_query(self, query, convert_influx_index=False):
+    def do_query(self, query: str, convert_influx_index=False):
         """Query the influxDB and return results
 
         Parameters
@@ -114,6 +142,7 @@ class ClientSyncUtils(ClientUtilsAbstract):
         results : `pandas.DataFrame`
             Results of the query in a `~pandas.DataFrame`.
         """
+        self.save_query_to_history(query)
         result = self.influx_client.query(query)
         return self.result_handler(
             result, convert_influx_index=convert_influx_index
@@ -442,7 +471,7 @@ class _EfdClientStatic:
         return self.subclasses[efd_name](efd_name, *args, **kwargs)
 
 
-class EfdClientCommon(_EfdClientInterface):
+class EfdClientTools:
     """Shared class for async and sync EfdClient to avoid duplication code
 
     Parameters
@@ -463,26 +492,16 @@ class EfdClientCommon(_EfdClientInterface):
         substitute a mocked client for testing.
     """
 
-    _clients_available = {
-        "async": ClientAsyncUtils,
-        "blocking": ClientSyncUtils,
-    }
-
-    def __init__(
-        self,
+    @staticmethod
+    def get_client(
         efd_name,
         mode,
         db_name="efd",
         creds_service="https://roundtable.lsst.codes/segwarides/",
         timeout=900,
         client=None,
-        loop=None,
-
     ):
-        self.db_name = db_name
-        self._mode = mode
-        self._loop = loop or asyncio.get_event_loop()
-        self.auth = NotebookAuth(service_endpoint=creds_service)
+        auth = NotebookAuth(service_endpoint=creds_service)
         (
             host,
             schema_registry_url,
@@ -490,8 +509,8 @@ class EfdClientCommon(_EfdClientInterface):
             user,
             password,
             path,
-        ) = self.auth.get_auth(efd_name)
-        self.schema_registry_url = schema_registry_url
+        ) = auth.get_auth(efd_name)
+
         if client is None:
             health_url = urljoin(f"https://{host}:{port}", f"{path}health")
             response = requests.get(health_url)
@@ -501,7 +520,7 @@ class EfdClientCommon(_EfdClientInterface):
                     f"Received code:{response.status_code} "
                     f"when reaching {health_url}."
                 )
-            influx_client = aioinflux.InfluxDBClient(
+            client = aioinflux.InfluxDBClient(
                 host=host,
                 path=path,
                 port=port,
@@ -509,75 +528,19 @@ class EfdClientCommon(_EfdClientInterface):
                 username=user,
                 password=password,
                 db=db_name,
-                mode=mode,
+                mode=mode.value,
                 output="dataframe",
                 timeout=timeout,
             )
-        else:
-            influx_client = client
-        self._client_utils = (
-            EfdClientCommon._clients_available[mode](influx_client)
-            # type: ClientUtilsAbstract
-        )
-        self._query_history = []
+        return InfluxConnection.create_client(client, mode, auth, db_name, schema_registry_url)
 
-    @property
-    def mode(self):
-        """"""
-        return self._mode
-
-    @property
-    def query_history(self):
-        """Return query history
-
-        Returns
-        -------
-        results : `list`
-            All queries made with this client instance
-        """
-        return self._query_history
-
-    async def do_query(self, query, convert_influx_index=False):
-        """Query the influxDB and return results
-
-        Parameters
-        ----------
-        query : `str`
-            Query string to execute.
-        convert_influx_index : `bool`
-            Legacy flag to convert time index from TAI to UTC
-
-        Returns
-        -------
-        results : `pandas.DataFrame`
-            Results of the query in a `~pandas.DataFrame`.
-        """
-        self._query_history.append(query)
-        if self._mode == "async":
-            return await self._client_utils.do_query(
-                query, convert_influx_index=convert_influx_index
-            )
-        return self._client_utils.do_query(
-            query, convert_influx_index=convert_influx_index
-        )
-
-    async def get_topics(self):
-        topics = await self.do_query("SHOW MEASUREMENTS")
-        return topics["name"].tolist()
-
-    @runner
-    async def get_fields(self, topic_name):
-        fields = await self.do_query(
-            f'SHOW FIELD KEYS FROM "{self.db_name}"."autogen"."{topic_name}"'
-        )
-        return fields["fieldKey"].tolist()
-
+    @staticmethod
     def build_time_range_query(
-        self,
         topic_name,
         fields,
         start,
         end,
+        db_name,
         is_window=False,
         index=None,
         convert_influx_index=False,
@@ -639,42 +602,16 @@ class EfdClientCommon(_EfdClientInterface):
 
         # Build query here
         return (
-            f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen".'
+            f'SELECT {", ".join(fields)} FROM "{db_name}"."autogen".'
             f'"{topic_name}" WHERE {timespan}'
         )
 
-    async def select_time_series(
-        self,
-        topic_name,
-        fields,
-        start,
-        end,
-        is_window=False,
-        index=None,
-        convert_influx_index=False,
-        use_old_csc_indexing=False,
-    ):
-        query = self.build_time_range_query(
-            topic_name,
-            fields,
-            start,
-            end,
-            is_window,
-            index,
-            convert_influx_index,
-            use_old_csc_indexing,
-        )
-        # Do query
-        ret = await self.do_query(query, convert_influx_index)
-        if ret.empty and not await self._is_topic_valid(topic_name):
-            raise ValueError(f"Topic {topic_name} not in EFD schema")
-        return ret
-
-    async def select_top_n(
-        self,
+    @staticmethod
+    def build_select_top_n_query(
         topic_name,
         fields,
         num,
+        db_name,
         time_cut=None,
         index=None,
         convert_influx_index=False,
@@ -713,19 +650,13 @@ class EfdClientCommon(_EfdClientInterface):
 
         # Build query here
         query = (
-            f'SELECT {", ".join(fields)} FROM "{self.db_name}"."autogen".'
+            f'SELECT {", ".join(fields)} FROM "{db_name}"."autogen".'
             f'"{topic_name}"{pstr} {limit}'
         )
+        return query
 
-        # Do query
-        ret = await self.do_query(query, convert_influx_index)
-
-        if ret.empty and not await self._is_topic_valid(topic_name):
-            raise ValueError(f"Topic {topic_name} not in EFD schema")
-
-        return ret
-
-    def _make_fields(self, fields, base_fields):
+    @staticmethod
+    def _make_fields(fields, base_fields):
         """Construct the list of fields for a field that
         is the result of ingesting vector data.
 
@@ -767,21 +698,10 @@ class EfdClientCommon(_EfdClientInterface):
             ret[bfield].sort(key=part)
         return ret, n
 
-    async def select_packed_time_series(
-        self,
-        topic_name,
-        base_fields,
-        start,
-        end,
-        is_window=False,
-        index=None,
-        ref_timestamp_col="cRIO_timestamp",
-        ref_timestamp_fmt="unix_tai",
-        ref_timestamp_scale="tai",
-        convert_influx_index=False,
-        use_old_csc_indexing=False,
-    ):
-        fields = await self.get_fields(topic_name)
+    @classmethod
+    def make_fields(cls, fields: str, base_fields: [str, bytes]):
+        """
+        """
         if isinstance(base_fields, str):
             base_fields = [
                 base_fields,
@@ -791,23 +711,43 @@ class EfdClientCommon(_EfdClientInterface):
             base_fields = [
                 base_fields,
             ]
-        qfields, els = self._make_fields(fields, base_fields)
+        qfields, els = cls._make_fields(fields, base_fields)
         field_list = []
         for k in qfields:
             field_list += qfields[k]
-        result = await self.select_time_series(
-            topic_name,
-            field_list +
-            [
-                ref_timestamp_col,
-            ],
-            start,
-            end,
-            is_window=is_window,
-            index=index,
-            convert_influx_index=convert_influx_index,
-            use_old_csc_indexing=use_old_csc_indexing,
-        )
+        return field_list
+
+    @staticmethod
+    def merge_packed_time_series(
+        result,
+        base_fields,
+        ref_timestamp_col="cRIO_timestamp",
+        ref_timestamp_fmt="unix_tai",
+        ref_timestamp_scale="tai",
+    ):
+        """Merge packed time series
+
+        Parameters
+        ----------
+        result: pass
+            checking
+        base_fields :  `str` or `list`
+            Base field name(s) that will be expanded to query all
+            vector entries.
+        ref_timestamp_col : `str`, optional
+            Name of the field name to use to assign timestamps to unpacked
+            vector fields (default is 'cRIO_timestamp').
+        ref_timestamp_fmt : `str`, optional
+            Format to use to translating ``ref_timestamp_col`` values
+            (default is 'unix_tai').
+        ref_timestamp_scale : `str`, optional
+            Time scale to use in translating ``ref_timestamp_col`` values
+            (default is 'tai').
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A `~pandas.DataFrame` containing the results of the query.
+        """
         vals = {}
         for f in base_fields:
             df = merge_packed_time_series(
@@ -820,25 +760,6 @@ class EfdClientCommon(_EfdClientInterface):
             vals[f] = df[f]
         vals.update({"times": df["times"]})
         return pd.DataFrame(vals, index=df.index)
-
-    async def _is_topic_valid(self, topic: str) -> bool:
-        """Check if the specified topic is in the schema.
-        A topic is valid and returns `True` if it is in the cached list of
-        topics. Any other case returns `False`.
-
-        Parameters
-        ----------
-        topic : `str`
-            The name of the topic to look for.
-        Returns
-        -------
-        is_valid : `bool`
-            A boolean indicating if the topic is valid.
-        """
-        existing_topics = await self.get_topics()
-        if topic not in existing_topics:
-            return False
-        return True
 
     @staticmethod
     def parse_schema(topic, schema):
@@ -876,19 +797,6 @@ class EfdClientCommon(_EfdClientInterface):
                 vals["is_array"].append(False)
         return pd.DataFrame(vals)
 
-    async def get_schema(self, topic):
-        async with aiohttp.ClientSession() as http_session:
-            registry_api = RegistryApi(
-                session=http_session, url=self.schema_registry_url
-            )
-            if self.mode == "async":
-                schema = await registry_api.get_schema_by_subject(
-                    f"{topic}-value"
-                )
-            else:
-                schema = registry_api.get_schema_by_subject(f"{topic}-value")
-            return self.parse_schema(topic, schema)
-
 
 class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
     """Class to handle connections and basic queries synchronously
@@ -911,7 +819,7 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         substitute a mocked client for testing.
     """
 
-    mode = "blocking"
+    mode = ClientMode.SYNC
 
     def __init__(
         self,
@@ -921,20 +829,22 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._efd_commons = EfdClientCommon(
-            efd_name,
-            "blocking",
-            db_name,
-            creds_service,
-            timeout,
-            client,
-        )
+        self._influx_client = EfdClientTools.get_client(efd_name,
+                                                        EfdClientSync.mode,
+                                                        db_name,
+                                                        creds_service,
+                                                        timeout,
+                                                        client)
 
     def get_topics(self):
-        return self._efd_commons.get_topics()
+        topics = self._influx_client.do_query("SHOW MEASUREMENTS")
+        return topics["name"].tolist()
 
     def get_fields(self, topic_name):
-        return self._efd_commons.get_fields(topic_name)
+        fields = self._influx_client.do_query(
+            f'SHOW FIELD KEYS FROM "{self._influx_client.db_name}"."autogen"."{topic_name}"'
+        )
+        return fields["fieldKey"].tolist()
 
     @property
     def query_history(self):
@@ -945,7 +855,7 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         results : `list`
             All queries made with this client instance
         """
-        return self._efd_commons.query_history
+        return self._influx_client.query_history
 
     def build_time_range_query(
         self,
@@ -958,11 +868,12 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return self._efd_commons.build_time_range_query(
+        return EfdClientTools.build_time_range_query(
             topic_name,
             fields,
             start,
             end,
+            self._influx_client.db_name,
             is_window,
             index,
             convert_influx_index,
@@ -980,7 +891,7 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return self._efd_commons.select_time_series(
+        query = self.build_time_range_query(
             topic_name,
             fields,
             start,
@@ -990,6 +901,10 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             convert_influx_index,
             use_old_csc_indexing,
         )
+        ret = self._influx_client.do_query(query, convert_influx_index)
+        if ret.empty and not self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+        return ret
 
     def select_top_n(
         self,
@@ -1001,17 +916,22 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return self._efd_commons.select_top_n(
-            topic_name,
-            fields,
-            num,
-            time_cut,
-            index,
-            convert_influx_index,
-            use_old_csc_indexing,
-        )
+        query = EfdClientTools.build_select_top_n_query(topic_name,
+                                                        fields,
+                                                        num,
+                                                        self._influx_client.db_name,
+                                                        time_cut=None,
+                                                        index=None,
+                                                        convert_influx_index=False,
+                                                        use_old_csc_indexing=False,)
 
-    def select_packed_time_series(
+        ret = self._influx_client.do_query(query, convert_influx_index)
+
+        if ret.empty and not self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+        return ret
+
+    async def select_packed_time_series(
         self,
         topic_name,
         base_fields,
@@ -1025,22 +945,51 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return self._efd_commons.select_packed_time_series(
+        fields = self.get_fields(topic_name)
+        field_list = EfdClientTools.make_fields(fields, base_fields)
+        result = self.select_time_series(
             topic_name,
-            base_fields,
+            field_list +
+            [
+                ref_timestamp_col,
+            ],
             start,
             end,
-            is_window,
-            index,
-            ref_timestamp_col,
-            ref_timestamp_fmt,
-            ref_timestamp_scale,
-            convert_influx_index,
-            use_old_csc_indexing,
+            is_window=is_window,
+            index=index,
+            convert_influx_index=convert_influx_index,
+            use_old_csc_indexing=use_old_csc_indexing,
         )
+        return EfdClientTools.merge_packed_time_series(result,
+                                                       base_fields,
+                                                       ref_timestamp_col,
+                                                       ref_timestamp_fmt,
+                                                       ref_timestamp_scale)
+
+    def _is_topic_valid(self, topic: str) -> bool:
+        """Check if the specified topic is in the schema.
+        A topic is valid and returns `True` if it is in the cached list of
+        topics. Any other case returns `False`.
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to look for.
+        Returns
+        -------
+        is_valid : `bool`
+            A boolean indicating if the topic is valid.
+        """
+        existing_topics = self.get_topics()
+        return topic in existing_topics
 
     def get_schema(self, topic):
-        return self._efd_commons.get_schema(self, topic)
+        with aiohttp.ClientSession() as http_session:
+            registry_api = RegistryApi(
+                session=http_session, url=self._influx_client.schema_registry_url
+            )
+            schema = registry_api.get_schema_by_subject(f"{topic}-value")
+        return self.parse_schema(topic, schema)
 
 
 class EfdClient(_EfdClientInterface, _EfdClientStatic):
@@ -1064,7 +1013,7 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         substitute a mocked client for testing.
     """
 
-    mode = "async"
+    mode = ClientMode.ASYNC
 
     def __init__(
         self,
@@ -1074,20 +1023,22 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._efd_commons = EfdClientCommon(
-            efd_name,
-            "async",
-            db_name,
-            creds_service,
-            timeout,
-            client,
-        )
+        self._influx_client = EfdClientTools.get_client(efd_name,
+                                                        EfdClient.mode,
+                                                        db_name,
+                                                        creds_service,
+                                                        timeout,
+                                                        client)
 
     async def get_topics(self):
-        return await self._efd_commons.get_topics()
+        topics = await self._influx_client.do_query("SHOW MEASUREMENTS")
+        return topics["name"].tolist()
 
     async def get_fields(self, topic_name):
-        return await self._efd_commons.get_fields(topic_name)
+        fields = await self._influx_client.do_query(
+            f'SHOW FIELD KEYS FROM "{self._influx_client.db_name}"."autogen"."{topic_name}"'
+        )
+        return fields["fieldKey"].tolist()
 
     @property
     def query_history(self):
@@ -1098,7 +1049,7 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         results : `list`
             All queries made with this client instance
         """
-        return self._efd_commons.query_history
+        return self._influx_client.query_history
 
     def build_time_range_query(
         self,
@@ -1111,11 +1062,12 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return self._efd_commons.build_time_range_query(
+        return EfdClientTools.build_time_range_query(
             topic_name,
             fields,
             start,
             end,
+            self._influx_client.db_name,
             is_window,
             index,
             convert_influx_index,
@@ -1133,7 +1085,7 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return await self._efd_commons.select_time_series(
+        query = self.build_time_range_query(
             topic_name,
             fields,
             start,
@@ -1143,6 +1095,10 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
             convert_influx_index,
             use_old_csc_indexing,
         )
+        ret = await self._influx_client.do_query(query, convert_influx_index)
+        if ret.empty and not await self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+        return ret
 
     async def select_top_n(
         self,
@@ -1154,15 +1110,21 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return await self._efd_commons.select_top_n(
-            topic_name,
-            fields,
-            num,
-            time_cut,
-            index,
-            convert_influx_index,
-            use_old_csc_indexing,
-        )
+
+        query = EfdClientTools.build_select_top_n_query(topic_name,
+                                                        fields,
+                                                        num,
+                                                        self._influx_client.db_name,
+                                                        time_cut=None,
+                                                        index=None,
+                                                        convert_influx_index=False,
+                                                        use_old_csc_indexing=False,)
+
+        ret = await self._influx_client.do_query(query, convert_influx_index)
+
+        if ret.empty and not await self._is_topic_valid(topic_name):
+            raise ValueError(f"Topic {topic_name} not in EFD schema")
+        return ret
 
     async def select_packed_time_series(
         self,
@@ -1178,19 +1140,49 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        return await self._efd_commons.select_packed_time_series(
+        fields = await self.get_fields(topic_name)
+        field_list = EfdClientTools.make_fields(fields, base_fields)
+        result = await self.select_time_series(
             topic_name,
-            base_fields,
+            field_list +
+            [
+                ref_timestamp_col,
+            ],
             start,
             end,
-            is_window,
-            index,
-            ref_timestamp_col,
-            ref_timestamp_fmt,
-            ref_timestamp_scale,
-            convert_influx_index,
-            use_old_csc_indexing,
+            is_window=is_window,
+            index=index,
+            convert_influx_index=convert_influx_index,
+            use_old_csc_indexing=use_old_csc_indexing,
         )
+        print(result)
+        return EfdClientTools.merge_packed_time_series(result,
+                                                       base_fields,
+                                                       ref_timestamp_col,
+                                                       ref_timestamp_fmt,
+                                                       ref_timestamp_scale)
+
+    async def _is_topic_valid(self, topic: str) -> bool:
+        """Check if the specified topic is in the schema.
+        A topic is valid and returns `True` if it is in the cached list of
+        topics. Any other case returns `False`.
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to look for.
+        Returns
+        -------
+        is_valid : `bool`
+            A boolean indicating if the topic is valid.
+        """
+        existing_topics = await self.get_topics()
+        return topic in existing_topics
 
     async def get_schema(self, topic):
-        return self._efd_commons.get_schema(self, topic)
+        async with aiohttp.ClientSession() as http_session:
+            registry_api = RegistryApi(
+                session=http_session, url=self._influx_client.schema_registry_url
+            )
+            schema = await registry_api.get_schema_by_subject(f"{topic}-value")
+        return self.parse_schema(topic, schema)
