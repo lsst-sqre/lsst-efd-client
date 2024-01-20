@@ -110,11 +110,11 @@ class InfluxConnection(ABC):
         """
         if not isinstance(query_result, pd.DataFrame) and not query_result:
             # aioinflux returns an empty dict for an empty query
-            result = pd.DataFrame()
+            query_result = pd.DataFrame()
         elif convert_influx_index:
-            times = Time(result.index, format="datetime", scale="tai")
-            result = result.set_index(times.utc.datetime)
-        return result
+            times = Time(query_result.index, format="datetime", scale="tai")
+            query_result = query_result.set_index(times.utc.datetime)
+        return query_result
 
     def save_query(self, query: str):
         """Save query to history.
