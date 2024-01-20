@@ -13,6 +13,8 @@ from aioinflux import InfluxDBClient
 from astropy.time import Time, TimeDelta
 from kafkit.registry.sansio import MockRegistryApi
 
+from lsst_efd_client.efd_helper import EfdClientTools
+
 from lsst_efd_client import (
     EfdClient,
     EfdClientSync,
@@ -207,61 +209,60 @@ async def test_build_query_tai(start_stop):
 @safe_vcr.use_cassette()
 async def test_parse_schema():
     """Test the EfdClient._parse_schema method."""
-    async with make_efd_client() as efd_client:
-        # Body that we expect the registry API to return given the request.
-        expected_body = {
-            "schema": json.dumps(
-                {
-                    "name": "schema1",
-                    "type": "record",
-                    "fields": [
-                        {
-                            "name": "a",
-                            "type": "int",
-                            "description": "Description 1",
-                            "units": "second",
-                        },
-                        {
-                            "name": "b",
-                            "type": "double",
-                            "description": "Description 2",
-                            "units": "meter",
-                        },
-                        {
-                            "name": "c",
-                            "type": "float",
-                            "description": "Description 3",
-                            "units": "gram",
-                        },
-                        {
-                            "name": "d",
-                            "type": "string",
-                            "description": "Description 4",
-                            "units": "torr",
-                        },
-                    ],
-                }
-            ),
-            "subject": "schema1",
-            "version": 1,
-            "id": 2,
-        }
+    # Body that we expect the registry API to return given the request.
+    expected_body = {
+        "schema": json.dumps(
+            {
+                "name": "schema1",
+                "type": "record",
+                "fields": [
+                    {
+                        "name": "a",
+                        "type": "int",
+                        "description": "Description 1",
+                        "units": "second",
+                    },
+                    {
+                        "name": "b",
+                        "type": "double",
+                        "description": "Description 2",
+                        "units": "meter",
+                    },
+                    {
+                        "name": "c",
+                        "type": "float",
+                        "description": "Description 3",
+                        "units": "gram",
+                    },
+                    {
+                        "name": "d",
+                        "type": "string",
+                        "description": "Description 4",
+                        "units": "torr",
+                    },
+                ],
+            }
+        ),
+        "subject": "schema1",
+        "version": 1,
+        "id": 2,
+    }
 
-        body = json.dumps(expected_body).encode("utf-8")
-        client = MockRegistryApi(body=body)
+    body = json.dumps(expected_body).encode("utf-8")
+    client = MockRegistryApi(body=body)
 
-        schema = await client.get_schema_by_subject("schema1")
-        result = efd_client._efd_commons.parse_schema("schema1", schema)
-        assert isinstance(result, pd.DataFrame)
-        for i, l in enumerate("abcd"):
-            assert result["name"][i] == l
-        for i in range(4):
-            assert result["description"][i] == f"Description {i+1}"
-        assert "units" in result.columns
-        assert "aunits" in result.columns
-        assert "type" not in result.columns
-        for unit in result["aunits"]:
-            assert isinstance(unit, u.UnitBase)
+    schema = await client.get_schema_by_subject("schema1")
+    result = EfdClientTools.parse_schema("schema1", schema)
+    assert isinstance(result, pd.DataFrame)
+    for i, l in enumerate("abcd"):
+        assert result["name"][i] == l
+    for i in range(4):
+        assert result["description"][i] == f"Description {i+1}"
+    assert "units" in result.columns
+    assert "aunits" in result.columns
+    assert "type" not in result.columns
+    for unit in result["aunits"]:
+        assert isinstance(unit, u.UnitBase)
 
 
 @pytest.mark.asyncio
@@ -270,34 +271,33 @@ async def test_bad_units():
     """Test that the EfdClient._parse_schema method raises when a bad astropy
     unit definition is passed.
     """
-    async with make_efd_client() as efd_client:
-        # Body that we expect the registry API to return given the request.
-        expected_body = {
-            "schema": json.dumps(
-                {
-                    "name": "schema1",
-                    "type": "record",
-                    "fields": [
-                        {
-                            "name": "a",
-                            "type": "int",
-                            "description": "Description 1",
-                            "units": "not_unit",
-                        },
-                    ],
-                }
-            ),
-            "subject": "schema1",
-            "version": 1,
-            "id": 2,
-        }
+    # Body that we expect the registry API to return given the request.
+    expected_body = {
+        "schema": json.dumps(
+            {
+                "name": "schema1",
+                "type": "record",
+                "fields": [
+                    {
+                        "name": "a",
+                        "type": "int",
+                        "description": "Description 1",
+                        "units": "not_unit",
+                    },
+                ],
+            }
+        ),
+        "subject": "schema1",
+        "version": 1,
+        "id": 2,
+    }
 
-        body = json.dumps(expected_body).encode("utf-8")
-        client = MockRegistryApi(body=body)
+    body = json.dumps(expected_body).encode("utf-8")
+    client = MockRegistryApi(body=body)
 
-        schema = await client.get_schema_by_subject("schema1")
-        with pytest.raises(ValueError):
-            efd_client._efd_commons.parse_schema("schema1", schema)
+    schema = await client.get_schema_by_subject("schema1")
+    with pytest.raises(ValueError):
+        EfdClientTools.parse_schema("schema1", schema)
 
 
 @pytest.mark.asyncio
