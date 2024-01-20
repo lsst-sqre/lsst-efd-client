@@ -13,8 +13,6 @@ from aioinflux import InfluxDBClient
 from astropy.time import Time, TimeDelta
 from kafkit.registry.sansio import MockRegistryApi
 
-from lsst_efd_client.efd_helper import EfdClientTools
-
 from lsst_efd_client import (
     EfdClient,
     EfdClientSync,
@@ -22,6 +20,7 @@ from lsst_efd_client import (
     rendezvous_dataframes,
     resample,
 )
+from lsst_efd_client.efd_helper import EfdClientTools
 
 PATH = pathlib.Path(__file__).parent.absolute()
 
