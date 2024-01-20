@@ -1,9 +1,10 @@
 """EFD client."""
 
 from abc import ABC, abstractmethod
-from functools import partial
-from urllib.parse import urljoin
 from enum import Enum
+from functools import partial
+from typing import Any
+from urllib.parse import urljoin
 
 import aiohttp
 import aioinflux
@@ -12,7 +13,6 @@ import pandas as pd
 import requests
 from astropy.time import Time, TimeDelta
 from kafkit.registry.aiohttp import RegistryApi
-from typing import Any
 
 from .auth_helper import NotebookAuth
 from .efd_utils import merge_packed_time_series
@@ -26,26 +26,26 @@ class ClientMode(Enum):
 class InfluxConnection(ABC):
     """Abstract class to handle connections and basic querying
 
-        Parameters
-        ----------
-        client : `aioinflux.client.InfluxDBClient`
-            An instance of a class `aioinflux.client.InfluxDBClient`.
-        mode: `ClientMode`
-            Client mode, async or sync.
-        auth: `lsst_efd_client.auth_helper.NotebookAuth`
-            Influxdb connection authorization details class instance.
-        db_name: `str`
-            Database name.
-        schema_registry_url: `str`
-            URL of the schema.
-        """
+    Parameters
+    ----------
+    client : `aioinflux.client.InfluxDBClient`
+        An instance of a class `aioinflux.client.InfluxDBClient`.
+    mode: `ClientMode`
+        Client mode, async or sync.
+    auth: `lsst_efd_client.auth_helper.NotebookAuth`
+        Influxdb connection authorization details class instance.
+    db_name: `str`
+        Database name.
+    schema_registry_url: `str`
+        URL of the schema.
+    """
 
     def __init__(
         self,
         client: aioinflux.InfluxDBClient,
         auth: NotebookAuth,
         db_name: str,
-        schema_registry_url: str
+        schema_registry_url: str,
     ):
         super().__init__()
         self._client = client
@@ -77,9 +77,13 @@ class InfluxConnection(ABC):
         ------
         """
         if mode == ClientMode.ASYNC:
-            return InfluxAsyncConnection(client, auth, db_name, schema_registry_url)
+            return InfluxAsyncConnection(
+                client, auth, db_name, schema_registry_url
+            )
         elif mode == ClientMode.SYNC:
-            return InfluxSyncConnection(client, auth, db_name, schema_registry_url)
+            return InfluxSyncConnection(
+                client, auth, db_name, schema_registry_url
+            )
         raise Exception(f"Non recognized client {mode.value}")
 
     @abstractmethod
@@ -177,7 +181,7 @@ class InfluxConnection(ABC):
 
         Result
         ------
-        query_history: `List[str]`
+        query_history: `list`
             list of queries made by this instance
         """
         return self._query_history
@@ -634,7 +638,9 @@ class EfdClientTools:
                 output="dataframe",
                 timeout=timeout,
             )
-        return InfluxConnection.create_client(client, mode, auth, db_name, schema_registry_url)
+        return InfluxConnection.create_client(
+            client, mode, auth, db_name, schema_registry_url
+        )
 
     @staticmethod
     def build_time_range_query(
@@ -769,7 +775,7 @@ class EfdClientTools:
         for bfield in base_fields:
             for f in fields:
                 if (
-                    f.startswith(bfield) and f[len(bfield):].isdigit()
+                    f.startswith(bfield) and f[len(bfield) :].isdigit()
                 ):  # Check prefix is complete
                     ret.setdefault(bfield, []).append(f)
             if n is None:
@@ -781,7 +787,7 @@ class EfdClientTools:
                 )
 
             def sorter(prefix, val):
-                return int(val[len(prefix):])
+                return int(val[len(prefix) :])
 
             part = partial(sorter, bfield)
             ret[bfield].sort(key=part)
@@ -848,8 +854,8 @@ class EfdClientTools:
                 vals["units"].append(f["units"])
                 # Special case not having units
                 if (
-                    vals["units"][-1] == "unitless" or
-                    vals["units"][-1] == "dimensionless"
+                    vals["units"][-1] == "unitless"
+                    or vals["units"][-1] == "dimensionless"
                 ):
                     vals["aunits"].append(u.dimensionless_unscaled)
                 else:
@@ -895,12 +901,14 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._influx_client = EfdClientTools.get_client(efd_name,
-                                                        EfdClientSync.mode,
-                                                        db_name,
-                                                        creds_service,
-                                                        timeout,
-                                                        client)
+        self._influx_client = EfdClientTools.get_client(
+            efd_name,
+            EfdClientSync.mode,
+            db_name,
+            creds_service,
+            timeout,
+            client,
+        )
 
     def get_topics(self):
         topics = self._influx_client.do_query("SHOW MEASUREMENTS")
@@ -908,7 +916,8 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
 
     def get_fields(self, topic_name):
         fields = self._influx_client.do_query(
-            f'SHOW FIELD KEYS FROM "{self._influx_client.db_name}"."autogen"."{topic_name}"'
+            f'SHOW FIELD KEYS FROM "{self._influx_client.db_name}"'
+            f'."autogen"."{topic_name}"'
         )
         return fields["fieldKey"].tolist()
 
@@ -918,7 +927,7 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
 
         Returns
         -------
-        results : `List[str]`
+        results : `list`
             All queries made with this client instance
         """
         return self._influx_client.query_history
@@ -982,14 +991,16 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-        query = EfdClientTools.build_select_top_n_query(topic_name,
-                                                        fields,
-                                                        num,
-                                                        self._influx_client.db_name,
-                                                        time_cut=None,
-                                                        index=None,
-                                                        convert_influx_index=False,
-                                                        use_old_csc_indexing=False,)
+        query = EfdClientTools.build_select_top_n_query(
+            topic_name,
+            fields,
+            num,
+            self._influx_client.db_name,
+            time_cut=None,
+            index=None,
+            convert_influx_index=False,
+            use_old_csc_indexing=False,
+        )
 
         ret = self._influx_client.do_query(query, convert_influx_index)
 
@@ -1015,8 +1026,8 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
         field_list = EfdClientTools.make_fields(fields, base_fields)
         result = self.select_time_series(
             topic_name,
-            field_list +
-            [
+            field_list
+            + [
                 ref_timestamp_col,
             ],
             start,
@@ -1026,11 +1037,13 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
             convert_influx_index=convert_influx_index,
             use_old_csc_indexing=use_old_csc_indexing,
         )
-        return EfdClientTools.merge_packed_time_series(result,
-                                                       base_fields,
-                                                       ref_timestamp_col,
-                                                       ref_timestamp_fmt,
-                                                       ref_timestamp_scale)
+        return EfdClientTools.merge_packed_time_series(
+            result,
+            base_fields,
+            ref_timestamp_col,
+            ref_timestamp_fmt,
+            ref_timestamp_scale,
+        )
 
     def _is_topic_valid(self, topic: str) -> bool:
         # A helper function that check if the specified topic is in the schema.
@@ -1042,7 +1055,8 @@ class EfdClientSync(_EfdClientInterface, _EfdClientStatic):
     def get_schema(self, topic):
         with aiohttp.ClientSession() as http_session:
             registry_api = RegistryApi(
-                session=http_session, url=self._influx_client.schema_registry_url
+                session=http_session,
+                url=self._influx_client.schema_registry_url,
             )
             schema = registry_api.get_schema_by_subject(f"{topic}-value")
         return EfdClientTools.parse_schema(topic, schema)
@@ -1079,12 +1093,9 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._influx_client = EfdClientTools.get_client(efd_name,
-                                                        EfdClient.mode,
-                                                        db_name,
-                                                        creds_service,
-                                                        timeout,
-                                                        client)
+        self._influx_client = EfdClientTools.get_client(
+            efd_name, EfdClient.mode, db_name, creds_service, timeout, client
+        )
 
     async def get_topics(self):
         topics = await self._influx_client.do_query("SHOW MEASUREMENTS")
@@ -1092,7 +1103,8 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
 
     async def get_fields(self, topic_name):
         fields = await self._influx_client.do_query(
-            f'SHOW FIELD KEYS FROM "{self._influx_client.db_name}"."autogen"."{topic_name}"'
+            f'SHOW FIELD KEYS FROM "{self._influx_client.db_name}"'
+            f'."autogen"."{topic_name}"'
         )
         return fields["fieldKey"].tolist()
 
@@ -1166,15 +1178,16 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         convert_influx_index=False,
         use_old_csc_indexing=False,
     ):
-
-        query = EfdClientTools.build_select_top_n_query(topic_name,
-                                                        fields,
-                                                        num,
-                                                        self._influx_client.db_name,
-                                                        time_cut=None,
-                                                        index=None,
-                                                        convert_influx_index=False,
-                                                        use_old_csc_indexing=False,)
+        query = EfdClientTools.build_select_top_n_query(
+            topic_name,
+            fields,
+            num,
+            self._influx_client.db_name,
+            time_cut=None,
+            index=None,
+            convert_influx_index=False,
+            use_old_csc_indexing=False,
+        )
 
         ret = await self._influx_client.do_query(query, convert_influx_index)
 
@@ -1200,8 +1213,8 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
         field_list = EfdClientTools.make_fields(fields, base_fields)
         result = await self.select_time_series(
             topic_name,
-            field_list +
-            [
+            field_list
+            + [
                 ref_timestamp_col,
             ],
             start,
@@ -1211,11 +1224,13 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
             convert_influx_index=convert_influx_index,
             use_old_csc_indexing=use_old_csc_indexing,
         )
-        return EfdClientTools.merge_packed_time_series(result,
-                                                       base_fields,
-                                                       ref_timestamp_col,
-                                                       ref_timestamp_fmt,
-                                                       ref_timestamp_scale)
+        return EfdClientTools.merge_packed_time_series(
+            result,
+            base_fields,
+            ref_timestamp_col,
+            ref_timestamp_fmt,
+            ref_timestamp_scale,
+        )
 
     async def _is_topic_valid(self, topic: str) -> bool:
         # A helper function that check if the specified topic is in the schema.
@@ -1227,7 +1242,8 @@ class EfdClient(_EfdClientInterface, _EfdClientStatic):
     async def get_schema(self, topic):
         async with aiohttp.ClientSession() as http_session:
             registry_api = RegistryApi(
-                session=http_session, url=self._influx_client.schema_registry_url
+                session=http_session,
+                url=self._influx_client.schema_registry_url,
             )
             schema = await registry_api.get_schema_by_subject(f"{topic}-value")
         return EfdClientTools.parse_schema(topic, schema)
