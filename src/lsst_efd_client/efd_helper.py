@@ -210,7 +210,7 @@ class InfluxAsyncConnection(InfluxConnection):
         results : `pandas.DataFrame`
             Results of the query in a `~pandas.DataFrame`.
         """
-        self.save_query_to_history(query)
+        self.save_query(query)
         result = await self.influx_client.query(query)
         return self.handle_query_result(
             result, convert_influx_index=convert_influx_index
@@ -244,7 +244,7 @@ class InfluxSyncConnection(InfluxConnection):
         results : `pandas.DataFrame`
             Results of the query in a `~pandas.DataFrame`.
         """
-        self.save_query_to_history(query)
+        self.save_query(query)
         result = self.influx_client.query(query)
         return self.handle_query_result(
             result, convert_influx_index=convert_influx_index
