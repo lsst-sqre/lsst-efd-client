@@ -432,7 +432,10 @@ class EfdClientSync(_EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._schema_registry_url, self._influx_client = EfdClientTools.get_client(
+        (
+            self._schema_registry_url,
+            self._influx_client,
+        ) = EfdClientTools.get_client(
             efd_name,
             EfdClientSync.mode,
             db_name,
@@ -810,7 +813,10 @@ class EfdClient(_EfdClientStatic):
         timeout=900,
         client=None,
     ):
-        self._schema_registry_url, self._influx_client = EfdClientTools.get_client(
+        (
+            self._schema_registry_url,
+            self._influx_client,
+        ) = EfdClientTools.get_client(
             efd_name, EfdClient.mode, db_name, creds_service, timeout, client
         )
         self._db_name = db_name
