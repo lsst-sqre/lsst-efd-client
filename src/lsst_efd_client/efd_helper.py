@@ -8,13 +8,13 @@ from urllib.parse import urljoin
 import aiohttp
 import aioinflux
 import astropy.units as u
+
 import pandas as pd
 import requests
 from astropy.time import Time, TimeDelta
 from kafkit.registry.aiohttp import RegistryApi
-
 from .auth_helper import NotebookAuth
-from .efd_utils import merge_packed_time_series
+from .efd_utils import merge_packed_time_series, SyncSchemaParser
 
 
 class ClientMode(Enum):
@@ -780,6 +780,31 @@ class EfdClientSync(_EfdClientStatic):
         # topics. Any other case returns `False`.
         existing_topics = self.get_topics()
         return topic in existing_topics
+
+    def get_schema(self, topic):
+        """
+        Given a topic, get a list of dictionaries describing the fields
+
+        Parameters
+        ----------
+        topic : `str`
+            The name of the topic to query. A full list of valid topic names
+            can be obtained using ``get_schema_topics``.
+
+        Returns
+        -------
+        result : `pandas.DataFrame`
+            A dataframe with the schema information for the topic.
+            One row per field.
+        """
+        with requests.Session() as http_session:
+            http_session.trust_env = False
+            registry_api = SyncSchemaParser(
+                session=http_session,
+                url=self._schema_registry_url,
+            )
+            schema = registry_api.get_schema_by_subject(f"{topic}-value")
+        return EfdClientTools.parse_schema(topic, schema)
 
 
 class EfdClient(_EfdClientStatic):
