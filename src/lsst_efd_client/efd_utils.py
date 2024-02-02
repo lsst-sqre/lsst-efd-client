@@ -1,17 +1,22 @@
 """Free functions to help out with EFD operations."""
 
 import contextlib
-import fastavro
 import json
-import requests
+from collections.abc import Mapping
+from typing import Any
+
+import fastavro
 import numpy as np
 import pandas as pd
-
+import requests
 from astropy.time import Time
-from collections.abc import Mapping
 from kafkit.httputils import format_url
-from kafkit.registry.sansio import make_headers, decipher_response, SchemaCache, SubjectCache
-from typing import Any
+from kafkit.registry.sansio import (
+    SchemaCache,
+    SubjectCache,
+    decipher_response,
+    make_headers,
+)
 
 
 def merge_packed_time_series(
@@ -176,26 +181,15 @@ class SyncSchemaParser:
         return self._subject_cache
 
     def _request(
-        self,
-        method: str,
-        url: str,
-        headers: Mapping[str, str],
-        body: bytes
+        self, method: str, url: str, headers: Mapping[str, str], body: bytes
     ) -> tuple[int, Mapping[str, str], bytes]:
         with self._session.request(
-            method,
-            url,
-            headers=headers,
-            data=body
+            method, url, headers=headers, data=body
         ) as response:
             return response.status_code, response.headers, response.content
 
     def _make_request(
-        self,
-        method: str,
-        url: str,
-        url_vars: Mapping[str, str],
-        data: Any
+        self, method: str, url: str, url_vars: Mapping[str, str], data: Any
     ) -> Any:
         """Construct and make an HTTP request."""
         expanded_url = format_url(host=self._url, url=url, url_vars=url_vars)
@@ -212,14 +206,10 @@ class SyncSchemaParser:
             ] = f"application/json; charset={charset}"
             request_headers["content-length"] = str(len(body))
 
-        response = self._request(
-            method, expanded_url, request_headers, body
-        )
+        response = self._request(method, expanded_url, request_headers, body)
         return decipher_response(*response)
 
-    def get(
-        self, url: str, url_vars: Mapping[str, str] | None = None
-    ) -> Any:
+    def get(self, url: str, url_vars: Mapping[str, str] | None = None) -> Any:
         """Send an HTTP GET request.
 
         Parameters
@@ -254,9 +244,7 @@ class SyncSchemaParser:
         return self._make_request("GET", url, url_vars, b"")
 
     def get_schema_by_subject(
-        self,
-        subject: str,
-        version: str | int = "latest"
+        self, subject: str, version: str | int = "latest"
     ) -> dict[str, Any]:
         """Get a schema for a subject in the registry.
 

@@ -8,13 +8,13 @@ from urllib.parse import urljoin
 import aiohttp
 import aioinflux
 import astropy.units as u
-
 import pandas as pd
 import requests
 from astropy.time import Time, TimeDelta
 from kafkit.registry.aiohttp import RegistryApi
+
 from .auth_helper import NotebookAuth
-from .efd_utils import merge_packed_time_series, SyncSchemaParser
+from .efd_utils import SyncSchemaParser, merge_packed_time_series
 
 
 class ClientMode(Enum):
