@@ -1,8 +1,22 @@
 """Free functions to help out with EFD operations."""
 
+import contextlib
+import json
+from collections.abc import Mapping
+from typing import Any
+
+import fastavro
 import numpy as np
 import pandas as pd
+import requests
 from astropy.time import Time
+from kafkit.httputils import format_url
+from kafkit.registry.sansio import (
+    SchemaCache,
+    SubjectCache,
+    decipher_response,
+    make_headers,
+)
 
 
 def merge_packed_time_series(
@@ -142,3 +156,164 @@ def rendezvous_dataframes(
         direction=direction,
         **kwargs,
     )
+
+
+class SyncSchemaParser:
+    """
+    Class based on `~kafkit.registry.sansio.RegistryApi` to be able
+    to parse the Confluence schema synchronously
+    """
+
+    def __init__(self, session: requests.Session, url: str):
+        self._session = session
+        self._url = url
+        self._schema_cache = SchemaCache()
+        self._subject_cache = SubjectCache(self._schema_cache)
+
+    @property
+    def schema_cache(self) -> SchemaCache:
+        """The schema cache (`~kafkit.registry.sansio.SchemaCache`)."""
+        return self._schema_cache
+
+    @property
+    def subject_cache(self) -> SubjectCache:
+        """The subject cache (`~kafkit.registry.sansio.SubjectCache`)."""
+        return self._subject_cache
+
+    def _request(
+        self, method: str, url: str, headers: Mapping[str, str], body: bytes
+    ) -> tuple[int, Mapping[str, str], bytes]:
+        with self._session.request(
+            method, url, headers=headers, data=body
+        ) as response:
+            return response.status_code, response.headers, response.content
+
+    def _make_request(
+        self, method: str, url: str, url_vars: Mapping[str, str], data: Any
+    ) -> Any:
+        """Construct and make an HTTP request."""
+        expanded_url = format_url(host=self._url, url=url, url_vars=url_vars)
+        request_headers = make_headers()
+
+        if data == b"":
+            body = b""
+            request_headers["content-length"] = "0"
+        else:
+            charset = "utf-8"
+            body = json.dumps(data).encode(charset)
+            request_headers[
+                "content-type"
+            ] = f"application/json; charset={charset}"
+            request_headers["content-length"] = str(len(body))
+
+        response = self._request(method, expanded_url, request_headers, body)
+        return decipher_response(*response)
+
+    def get(self, url: str, url_vars: Mapping[str, str] | None = None) -> Any:
+        """Send an HTTP GET request.
+
+        Parameters
+        ----------
+        url : `str`
+            The endpoint path, usually relative to the ``RegistryApi.url``
+            attribute (an absolute URL is also okay). The url can be templated
+            (``/a{/b}/c``, where ``b`` is a variable).
+        url_vars : `dict`, optional
+            A dictionary of variable names and values to expand the templated
+            ``url`` parameter.
+
+        Returns
+        -------
+        data : bytes
+            The response body. If the response is JSON, the data is parsed
+            into a Python object.
+
+        Raises
+        ------
+        kafkit.registry.RegistryRedirectionError
+            Raised if the server returns a 3XX status.
+        kafkit.registry.RegistryBadRequestError
+            Raised if the server returns a 4XX status because the request
+            is incorrect, not authenticated, or not authorized.
+        kafkit.registry.RegistryBrokenError
+            Raised if the server returns a 5XX status because something is
+            wrong with the server itself.
+        """
+        if url_vars is None:
+            url_vars = {}
+        return self._make_request("GET", url, url_vars, b"")
+
+    def get_schema_by_subject(
+        self, subject: str, version: str | int = "latest"
+    ) -> dict[str, Any]:
+        """Get a schema for a subject in the registry.
+
+        Wraps ``GET /subjects/(string: subject)/versions/(versionId: version)``
+
+        Parameters
+        ----------
+        subject : `str`
+            Name of the subject in the Schema Registry.
+        version : `int` or `str`, optional
+            The version of the schema with respect to the ``subject``. To
+            get the latest schema, supply ``"latest"`` (default).
+
+        Returns
+        -------
+        schema_info : `dict`
+            A dictionary with the schema and metadata about the schema. The
+            keys are:
+
+            ``"schema"``
+                The schema itself, preparsed by `fastavro.parse_schema
+                <fastavro._schema_py.parse_schema>`.
+            ``"subject"``
+                The subject this schema is registered under in the registry.
+            ``"version"``
+                The version of this schema with respect to the ``subject``.
+            ``"id"``
+                The ID of this schema (compatible with `get_schema_by_id`).
+
+        See Also
+        --------
+        get_schema_by_id
+
+        Notes
+        -----
+        Results from this method are cached locally, so repeated calls are
+        fast. Keep in mind that any call with the ``version`` parameter set
+        to ``"latest"`` will always miss the cache. The schema is still
+        cached, though, under it's true subject version. If you app repeatedly
+        calls this method, and you want to make use of caching, replace
+        ``"latest"`` versions with integer versions once they're known.
+        """
+        if isinstance(version, int):
+            try:
+                # The SubjectCache.get method is designed to have the same
+                # return type as this method.
+                return self.subject_cache.get(subject, version)
+            except ValueError:
+                pass
+
+        result = self.get(
+            "/subjects{/subject}/versions{/version}",
+            url_vars={"subject": subject, "version": str(version)},
+        )
+
+        schema = fastavro.parse_schema(json.loads(result["schema"]))
+
+        with contextlib.suppress(TypeError):
+            # Can't cache versions like "latest"
+            self.subject_cache.insert(
+                result["subject"],
+                result["version"],
+                schema_id=result["id"],
+                schema=schema,
+            )
+
+        return {
+            "id": result["id"],
+            "version": result["version"],
+            "subject": result["subject"],
+            "schema": schema,
+        }

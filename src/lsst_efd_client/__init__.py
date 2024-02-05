@@ -3,7 +3,7 @@
 import importlib.metadata
 
 from .auth_helper import NotebookAuth
-from .efd_helper import EfdClient
+from .efd_helper import EfdClient, EfdClientSync
 from .efd_utils import (
     merge_packed_time_series,
     rendezvous_dataframes,
@@ -13,6 +13,7 @@ from .efd_utils import (
 __all__ = [
     "NotebookAuth",
     "EfdClient",
+    "EfdClientSync",
     "resample",
     "rendezvous_dataframes",
     "merge_packed_time_series",

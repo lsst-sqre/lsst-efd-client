@@ -28,7 +28,7 @@ dependencies = [
     "astropy",
     "pyyaml",
     "tables",
-    "kafkit",
+    "kafkit"
 ]
 dynamic = ["version"]
 
